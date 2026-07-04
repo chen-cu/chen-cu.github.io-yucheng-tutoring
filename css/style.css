@@ -1,0 +1,530 @@
+/* ==========================================================================
+   宇誠文理家教團 — 全站樣式
+   基調:專業沉穩(深墨藍主色 + 米白底 + 深金點綴)
+   標題:Noto Serif TC/內文:Noto Sans TC
+   ========================================================================== */
+
+:root {
+  --ink: #1d2d3f;        /* 深墨藍(主色) */
+  --ink-deep: #14212f;   /* 更深的墨藍(hover、頁尾) */
+  --paper: #faf8f3;      /* 米白底 */
+  --paper-alt: #f2efe7;  /* 暖灰底(區塊交錯) */
+  --line: #d9d3c6;       /* 細線 */
+  --text: #333a41;       /* 內文 */
+  --muted: #6e6a60;      /* 次要文字 */
+  --accent: #9a7b3a;     /* 深金(唯一點綴色) */
+
+  --serif: "Noto Serif TC", "PMingLiU", serif;
+  --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.9;
+  color: var(--text);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 手機版底部固定按鈕會佔據空間 */
+@media (max-width: 767px) {
+  body { padding-bottom: 64px; }
+}
+
+.container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.container-narrow { max-width: 760px; }
+
+/* ---------- 頁首 ---------- */
+
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.brand {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.header-cta {
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--ink);
+  padding: 8px 20px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.header-cta:hover { background: var(--ink); color: #fff; }
+
+@media (max-width: 480px) {
+  .header-cta { display: none; }
+}
+
+/* ---------- 按鈕 ---------- */
+
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  padding: 14px 44px;
+  transition: background 0.2s;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: #fff;
+}
+
+.btn-primary:hover { background: var(--ink-deep); }
+
+/* ---------- 區塊 1|Hero ---------- */
+
+.hero {
+  padding: 88px 0 96px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+
+.hero-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+  line-height: 1.7;
+  color: var(--ink);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.hero-sub {
+  margin-top: 28px;
+  font-size: clamp(0.9375rem, 2.5vw, 1.0625rem);
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* 信任標語:細框標籤,全站主打 */
+.trust-badge {
+  display: inline-block;
+  margin-top: 36px;
+  padding: 12px 28px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(1rem, 3vw, 1.1875rem);
+  letter-spacing: 0.1em;
+}
+
+.hero-cta { margin-top: 40px; }
+
+.cta-note {
+  margin-top: 14px;
+  font-size: 0.875rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+/* ---------- 通用區塊 ---------- */
+
+.section {
+  padding: 80px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-alt { background: var(--paper-alt); }
+
+.section-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(1.375rem, 3.5vw, 1.875rem);
+  color: var(--ink);
+  text-align: center;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  padding-bottom: 24px;
+  position: relative;
+}
+
+/* 標題下的細短線 */
+.section-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.section-title + * { margin-top: 40px; }
+
+.section-closing {
+  margin-top: 48px;
+  text-align: center;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(1.0625rem, 3vw, 1.25rem);
+  color: var(--ink);
+  letter-spacing: 0.06em;
+}
+
+.section-cta { text-align: center; margin-top: 32px; }
+.section-cta .btn { margin-top: 24px; }
+.section-cta .section-closing { margin-top: 0; }
+
+/* ---------- 區塊 2|痛點共鳴 ---------- */
+
+.pain-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.pain-item {
+  padding: 28px 8px;
+  border-top: 1px solid var(--line);
+}
+
+.pain-item:last-child { border-bottom: 1px solid var(--line); }
+
+.pain-item h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.pain-item p { color: var(--text); }
+
+@media (min-width: 768px) {
+  .pain-grid { grid-template-columns: repeat(3, 1fr); }
+  .pain-item {
+    border-top: none;
+    border-left: 1px solid var(--line);
+    padding: 8px 32px;
+  }
+  .pain-item:first-child { border-left: none; padding-left: 8px; }
+  .pain-item:last-child { border-bottom: none; }
+}
+
+/* ---------- 區塊 3|四大核心優勢 ---------- */
+
+.advantage-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+}
+
+.advantage-item {
+  border-top: 2px solid var(--ink);
+  padding-top: 20px;
+}
+
+.advantage-item h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.1875rem;
+  color: var(--ink);
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+
+@media (min-width: 768px) {
+  .advantage-grid { grid-template-columns: repeat(2, 1fr); gap: 48px 56px; }
+}
+
+/* ---------- 區塊 4|課程規劃 ---------- */
+
+.subsection-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--ink);
+  letter-spacing: 0.08em;
+  margin: 48px 0 20px;
+  padding-left: 14px;
+  border-left: 3px solid var(--accent);
+}
+
+.section-title + .subsection-title { margin-top: 40px; }
+
+.course-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.course-col h4 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.course-list, .pricing-list { list-style: none; }
+
+.course-list li, .pricing-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.course-term {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pricing-lead {
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+@media (min-width: 768px) {
+  .course-grid { grid-template-columns: 1fr 1fr; gap: 64px; }
+}
+
+/* ---------- 區塊 5|師資陣容 ---------- */
+
+.teacher-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.teacher-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  padding: 28px 28px 26px;
+}
+
+.teacher-card .teacher-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.1875rem;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+
+.teacher-card .teacher-subject {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 2px;
+}
+
+.teacher-card .teacher-bio {
+  margin-top: 14px;
+  font-size: 0.9375rem;
+  line-height: 1.85;
+  color: var(--text);
+}
+
+.teacher-note {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.teacher-noscript {
+  text-align: center;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .teacher-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 960px) {
+  .teacher-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ---------- 區塊 6|試教流程 ---------- */
+
+.step-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.step-item {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.step-label {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+.step-item h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--ink);
+  margin: 8px 0 8px;
+}
+
+.step-item p { font-size: 0.9375rem; }
+
+@media (min-width: 768px) {
+  .step-grid { grid-template-columns: repeat(4, 1fr); gap: 32px; }
+}
+
+/* ---------- 區塊 7|常見問題 ---------- */
+
+.faq-list { border-top: 1px solid var(--line); }
+
+.faq-item { border-bottom: 1px solid var(--line); }
+
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 4px;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: var(--ink);
+}
+
+.faq-item summary::-webkit-details-marker { display: none; }
+
+.faq-item summary::after {
+  content: "+";
+  flex: none;
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--accent);
+  transition: transform 0.2s;
+}
+
+.faq-item[open] summary::after { content: "\2212"; } /* − 減號 */
+
+.faq-answer { padding: 0 4px 22px; }
+.faq-answer p { color: var(--text); }
+
+/* ---------- 區塊 8|最終 CTA ---------- */
+
+.final-title { margin-bottom: 8px; }
+
+.final-sub {
+  text-align: center;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.form-embed {
+  margin-top: 40px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.form-embed iframe {
+  display: block;
+  width: 100%;
+  height: 1150px;
+  border: 0;
+}
+
+.form-fallback {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* ---------- 頁尾 ---------- */
+
+.site-footer {
+  background: var(--ink-deep);
+  color: rgba(255, 255, 255, 0.78);
+  text-align: center;
+  padding: 48px 0;
+  font-size: 0.875rem;
+  letter-spacing: 0.06em;
+  line-height: 2.1;
+}
+
+.footer-brand {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1rem;
+  color: #fff;
+}
+
+/* ---------- 手機版底部固定按鈕 ---------- */
+
+.mobile-cta {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: var(--ink);
+  border-top: 1px solid var(--ink-deep);
+}
+
+.mobile-cta a {
+  display: block;
+  text-align: center;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  padding: 18px 16px;
+}
+
+.mobile-cta.is-hidden { display: none; }
+
+@media (max-width: 767px) {
+  .mobile-cta { display: block; }
+  .mobile-cta.is-hidden { display: none; }
+  .section { padding: 60px 0; }
+  .hero { padding: 64px 0 72px; }
+}
