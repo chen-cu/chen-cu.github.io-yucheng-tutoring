@@ -6,7 +6,7 @@
 |------|------|
 | `index.html` | 全部頁面文字(區塊 1–8)與版面結構 |
 | `css/style.css` | 全站樣式(配色、字體、排版) |
-| `js/main.js` | 師資資料陣列(區塊 5 的老師卡片由此產生)、手機底部按鈕行為 |
+| `js/main.js` | 手機浮動按鈕的自動隱藏行為 |
 
 ---
 
@@ -20,7 +20,7 @@
 | 區塊 2|痛點共鳴 | `<!-- ============ 區塊 2` | 三個情境各為一個 `<div class="pain-item">`,收尾句在 `.section-closing` |
 | 區塊 3|四大核心優勢 | `<!-- ============ 區塊 3` | 四項優勢各為一個 `<div class="advantage-item">` |
 | 區塊 4|課程規劃 | `<!-- ============ 區塊 4` | 國中/高中分班在兩個 `<div class="course-col">`,收費方式在 `.pricing-list` |
-| 區塊 5|師資陣容 | `<!-- ============ 區塊 5` | 老師卡片「不在 HTML 裡」,改到 `js/main.js` 的 `TEACHERS` 陣列(見下方說明) |
+| 區塊 5|師資陣容 | `<!-- ============ 區塊 5` | 每位老師為一個 `<article class="teacher-card">`,直接在 HTML 中新增或修改(見下方說明) |
 | 區塊 6|試教流程 | `<!-- ============ 區塊 6` | 四步驟各為一個 `<li class="step-item">` |
 | 區塊 7|常見問題 | `<!-- ============ 區塊 7` | 每題為一個 `<details class="faq-item">`(見下方說明) |
 | 區塊 8|最終 CTA | `<!-- ============ 區塊 8` | 主文案、副文案、Google 表單 iframe;頁尾文字在 `<footer class="site-footer">` |
@@ -33,42 +33,24 @@ Google 表單網址(`https://forms.gle/YUFZk5ZuCSZWK1hw6`)出現在多處:頁首
 
 ## 二、如何新增一位老師
 
-打開 `js/main.js`,找到最上方的 `TEACHERS` 陣列。每位老師是一個物件:
+打開 `index.html`,搜尋 `區塊 5`,找到 `<div class="teacher-grid">` 內的老師卡片。每位老師是一個 `<article>` 區塊:
 
-```js
-{
-  name: "Andy 老師",        // 姓名
-  subject: "數學・社會科",   // 科目(顯示在姓名下方的金色小標)
-  bio: "台南一中、台師大……"  // 介紹文字
-}
+```html
+<article class="teacher-card">
+  <h3 class="teacher-name">Andy 老師</h3>
+  <span class="teacher-subject">數學・社會科</span>
+  <p class="teacher-bio">介紹文字寫在這裡。</p>
+</article>
 ```
 
 **新增步驟:**
 
-1. 複製陣列中任一組 `{ ... }`(含前後大括號)。
-2. 貼到陣列最後一個物件之後,並確認物件之間以逗號 `,` 分隔。
-3. 修改 `name`、`subject`、`bio` 三個欄位。
-4. 存檔並推送,卡片會自動出現在師資區,無須改動 HTML 或 CSS。
+1. 複製上方任一個 `<article class="teacher-card">…</article>` 區塊。
+2. 貼在最後一張卡片的 `</article>` 之後(仍在 `<div class="teacher-grid">` 裡面)。
+3. 修改 `teacher-name`(姓名)、`teacher-subject`(科目)、`teacher-bio`(介紹)三處文字。
+4. 存檔並推送,卡片就會出現在師資區,無須改動 CSS 或 JS。
 
-範例(新增「Cindy 老師」):
-
-```js
-const TEACHERS = [
-  // ……原有老師……
-  {
-    name: "Alison 老師",
-    subject: "英語",
-    bio: "……"
-  },   // ← 記得這裡要有逗號
-  {
-    name: "Cindy 老師",
-    subject: "數學",
-    bio: "介紹文字寫在這裡。"
-  }
-];
-```
-
-刪除或調整老師順序,同樣只需在此陣列操作。
+刪除或調整老師順序,同樣直接在 HTML 中操作即可。
 
 ---
 
