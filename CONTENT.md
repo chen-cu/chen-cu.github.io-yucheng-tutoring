@@ -25,7 +25,7 @@
 | 區塊 7|常見問題 | `<!-- ============ 區塊 7` | 每題為一個 `<details class="faq-item">`(見下方說明) |
 | 區塊 8|最終 CTA | `<!-- ============ 區塊 8` | 主文案、副文案、Google 表單 iframe;頁尾文字在 `<footer class="site-footer">` |
 
-Google 表單網址(`https://forms.gle/YUFZk5ZuCSZWK1hw6`)出現在多處:頁首按鈕、Hero 按鈕、區塊 4 按鈕、區塊 8 iframe 與按鈕、手機底部固定按鈕。若日後更換表單,請在 `index.html` 全域搜尋取代此網址。
+Google 表單網址(`https://forms.gle/YUFZk5ZuCSZWK1hw6`)出現在多處:頁首按鈕、Hero 按鈕、區塊 4 按鈕、區塊 8 iframe 與按鈕、手機右下角浮動泡泡按鈕。若日後更換表單,請在 `index.html` 全域搜尋取代此網址。
 
 > 表單嵌入備註:目前 iframe 直接使用 forms.gle 短網址。若表單在某些瀏覽器無法顯示,請到 Google 表單後台 →「傳送」→「< >」取得正式嵌入網址(格式為 `https://docs.google.com/forms/d/e/…/viewform?embedded=true`),替換 `index.html` 中 iframe 的 `src` 即可。iframe 高度可在 `css/style.css` 的 `.form-embed iframe { height: 1150px; }` 調整。
 
@@ -95,5 +95,5 @@ FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
 ## 四、常用樣式調整(css/style.css)
 
 - **配色**:檔案最上方 `:root` 內的 CSS 變數。主色 `--ink`(深墨藍)、底色 `--paper`(米白)、點綴色 `--accent`(深金)。
-- **手機底部固定按鈕**:`.mobile-cta` 區段;僅在寬度 767px 以下顯示,捲動到表單區塊時會自動隱藏(由 `js/main.js` 控制)。
+- **手機右下角浮動泡泡按鈕**:`.cta-bubble` 區段;僅在寬度 767px 以下顯示,固定於右下角、捲動時跟隨,捲動到表單區塊時會自動淡出(由 `js/main.js` 控制)。大小與位置可調 `width`/`height`/`right`/`bottom`。
 - **信任標語(先上課,後收費)**:`.trust-badge`,細金框標籤樣式。
