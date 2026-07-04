@@ -99,6 +99,34 @@ body {
 
 .btn-primary:hover { background: var(--ink-deep); }
 
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.btn-outline:hover { background: var(--ink); color: #fff; }
+
+.btn-outline-light {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-group {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-group .btn { padding: 14px 32px; }
+
 /* ---------- 區塊 1|Hero ---------- */
 
 .hero {
@@ -492,37 +520,59 @@ body {
   color: #fff;
 }
 
-/* ---------- 手機版右下角浮動泡泡按鈕 ---------- */
+.site-footer a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
-.cta-bubble {
+.site-footer a:hover { color: #fff; }
+
+/* ---------- 手機版底部浮動按鈕列 ---------- */
+
+.mobile-cta-bar {
   display: none;
   position: fixed;
-  right: 16px;
-  bottom: 20px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 100;
-  padding: 14px 22px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: #fff;
-  text-decoration: none;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  box-shadow: 0 0 0 1px var(--accent), 0 4px 14px rgba(20, 33, 47, 0.3);
+  gap: 0;
   transition: opacity 0.25s, transform 0.25s;
 }
 
-.cta-bubble.is-hidden {
+.mobile-cta-bar.is-hidden {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(100%);
   pointer-events: none;
 }
 
+.mobile-cta-btn {
+  flex: 1;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  padding: 16px 8px;
+}
+
+.mobile-cta-line {
+  background: var(--ink);
+  color: #fff;
+}
+
+.mobile-cta-form {
+  background: var(--paper);
+  color: var(--ink);
+  border-top: 1px solid var(--line);
+}
+
 @media (max-width: 767px) {
-  .cta-bubble { display: flex; }
+  body { padding-bottom: 52px; }
+  .mobile-cta-bar { display: flex; }
   .section { padding: 60px 0; }
   .hero { padding: 64px 0 72px; }
 }
