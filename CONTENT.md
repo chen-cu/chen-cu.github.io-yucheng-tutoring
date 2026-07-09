@@ -25,13 +25,13 @@
 | 區塊 7|常見問題 | `<!-- ============ 區塊 7` | 每題為一個 `<details class="faq-item">`(見下方說明) |
 | 區塊 8|最終 CTA | `<!-- ============ 區塊 8` | 主文案、副文案、Google 表單 iframe;頁尾文字在 `<footer class="site-footer">` |
 
-**Google 表單網址**(`https://forms.gle/YUFZk5ZuCSZWK1hw6`)出現在以下位置,更換時請全域搜尋取代:
+**Google 表單網址**(`https://docs.google.com/forms/d/e/1FAIpQLSfV0DgDnflbURkFvsO0v_cIA_NW4LYOoRU7bpcnkXyn4XZO6g/viewform?usp=pp_url&entry.1670616827=%E5%AE%98%E6%96%B9%E7%B6%B2%E7%AB%99`)出現在以下位置,更換時請全域搜尋取代:
 - 頁首按鈕、Hero 區次按鈕、區塊 4 按鈕、區塊 8 iframe 與次按鈕、手機底部浮動按鈕列「預約試教」
 
 **LINE 加好友連結**(`https://lin.ee/oPeCDkw`)出現在以下位置,更換時同樣全域搜尋取代:
 - Hero 區主按鈕「加 LINE 免費諮詢」、區塊 8 主按鈕「加 LINE 免費諮詢」、手機底部浮動按鈕列「加 LINE 諮詢」、頁尾「加好友」連結
 
-> 表單嵌入備註:目前 iframe 直接使用 forms.gle 短網址。若表單在某些瀏覽器無法顯示,請到 Google 表單後台 →「傳送」→「< >」取得正式嵌入網址(格式為 `https://docs.google.com/forms/d/e/…/viewform?embedded=true`),替換 `index.html` 中 iframe 的 `src` 即可。iframe 高度可在 `css/style.css` 的 `.form-embed iframe { height: 1150px; }` 調整。
+> 表單嵌入備註:目前 iframe 使用完整 docs.google.com 網址(含 `entry.` 預填參數)。iframe 高度可在 `css/style.css` 的 `.form-embed iframe { height: 1150px; }` 調整。若日後更換表單,請在 `index.html` 全域搜尋取代整條連結(含 `?usp=…&entry.…` 參數)。
 
 ---
 
