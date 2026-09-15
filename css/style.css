@@ -337,6 +337,22 @@ body {
   .course-grid { grid-template-columns: 1fr 1fr; gap: 64px; }
 }
 
+.course-subtitle {
+  font-size: 0.9375rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-top: -12px;
+  margin-bottom: 20px;
+}
+
+.course-desc p {
+  margin-bottom: 14px;
+}
+
+.course-desc p:last-child { margin-bottom: 0; }
+
+.course-cta-buttons { margin-top: 24px; }
+
 /* ---------- 區塊 5|師資陣容 ---------- */
 
 .teacher-grid {

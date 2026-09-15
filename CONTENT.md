@@ -19,7 +19,7 @@
 | 區塊 1|首屏 Hero | `<!-- ============ 區塊 1` | 主標題在 `<h1 class="hero-title">`,副標題在 `.hero-sub`,信任標語在 `.trust-badge`,按鈕小字在 `.cta-note` |
 | 區塊 2|痛點共鳴 | `<!-- ============ 區塊 2` | 三個情境各為一個 `<div class="pain-item">`,收尾句在 `.section-closing` |
 | 區塊 3|四大核心優勢 | `<!-- ============ 區塊 3` | 四項優勢各為一個 `<div class="advantage-item">` |
-| 區塊 4|課程規劃 | `<!-- ============ 區塊 4` | 國中/高中分班在兩個 `<div class="course-col">`,收費方式在 `.pricing-list` |
+| 區塊 4|課程規劃 | `<!-- ============ 區塊 4` | 國中/高中分班在兩個 `<div class="course-col">`,收費方式在 `.pricing-list`,英語口說・發音課程在 `.course-desc`(見下方說明) |
 | 區塊 5|師資陣容 | `<!-- ============ 區塊 5` | 每位老師為一個 `<article class="teacher-card">`,直接在 HTML 中新增或修改(見下方說明) |
 | 區塊 6|試教流程 | `<!-- ============ 區塊 6` | 四步驟各為一個 `<li class="step-item">` |
 | 區塊 7|常見問題 | `<!-- ============ 區塊 7` | 每題為一個 `<details class="faq-item">`(見下方說明) |
@@ -58,7 +58,30 @@
 
 ---
 
-## 三、如何修改 FAQ(區塊 7)
+## 二之二、英語口說・發音課程（區塊 4）
+
+此課程項目位於區塊 4「課程規劃」內,在「收費方式」之後、section CTA 之前。結構如下:
+
+```html
+<h3 class="subsection-title">英語口說・發音課程</h3>
+<p class="course-subtitle">線上一對一 ｜ 國小・國中</p>
+<div class="course-desc">
+  <p>課程介紹段落……</p>
+</div>
+<div class="btn-group course-cta-buttons">
+  <a class="btn btn-primary" href="LINE 連結">加 LINE 免費諮詢</a>
+  <a class="btn btn-outline" href="表單連結">免費預約試教</a>
+</div>
+```
+
+- **修改課程介紹**:編輯 `.course-desc` 內各 `<p>` 段落的文字。
+- **修改副標**:編輯 `.course-subtitle` 的文字（如調整適用年級）。
+- **刪除此課程**:刪除從 `<h3 class="subsection-title">英語口說・發音課程</h3>` 到 `</div><!-- course-cta-buttons -->` 之間的所有內容。
+- **新增類似的獨立課程**:複製上方整組結構（`<h3>` + `.course-subtitle` + `.course-desc` + `.btn-group`），貼在收費方式區塊之後,修改標題、副標與內容即可。
+
+---
+
+## 三、如何修改 FAQ（區塊 7）
 
 FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
 
