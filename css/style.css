@@ -107,17 +107,6 @@ body {
 
 .btn-outline:hover { background: var(--ink); color: #fff; }
 
-.btn-outline-light {
-  color: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-.btn-outline-light:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.7);
-}
-
 .btn-group {
   display: flex;
   gap: 16px;
