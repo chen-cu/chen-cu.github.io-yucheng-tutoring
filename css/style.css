@@ -124,6 +124,15 @@ body {
   text-align: center;
 }
 
+.hero-eyebrow {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(0.9375rem, 2.6vw, 1.0625rem);
+  color: var(--accent);
+  letter-spacing: 0.18em;
+  margin-bottom: 20px;
+}
+
 .hero-title {
   font-family: var(--serif);
   font-weight: 700;
