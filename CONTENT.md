@@ -111,8 +111,8 @@ FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
 
 ## 教學實績(區塊 3 下方)
 
-位置:`index.html` 搜尋 `class="record"`。三個數字各為一個 `<div class="record-item">`,底下的 `.record-note` 寫統計截止月份。
+位置:`index.html` 搜尋 `class="record"`。兩個數字各為一個 `<div class="record-item">`。
 
 - 數字一律取自記帳表「業務成長」分頁的「宣傳可用數字」,只寫實際紀錄,不往上四捨五入
-- 每次更新數字時,同步修改 `.record-note` 的「統計至 YYYY 年 M 月」
+- 數字用門檻寫法(例:100 小時以上),不需每月更新;累計時數跨過下一個門檻(如 200 小時)再改
 - 累計學生數達 20 位以上再考慮放上

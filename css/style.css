@@ -331,7 +331,7 @@ body {
 }
 
 @media (min-width: 768px) {
-  .record-grid { grid-template-columns: repeat(3, 1fr); gap: 0; }
+  .record-grid { grid-template-columns: repeat(2, 1fr); gap: 0; max-width: 640px; margin: 0 auto; }
   .record-item { padding: 0 24px; border-left: 1px solid var(--line); }
   .record-item:first-child { border-left: none; }
 }
