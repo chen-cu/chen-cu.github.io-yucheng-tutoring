@@ -324,7 +324,7 @@ body {
 }
 
 @media (min-width: 768px) {
-  .record-grid { grid-template-columns: repeat(2, 1fr); gap: 0; max-width: 640px; margin: 0 auto; }
+  .record-grid { grid-template-columns: repeat(3, 1fr); gap: 0; }
   .record-item { padding: 0 24px; border-left: 1px solid var(--line); }
   .record-item:first-child { border-left: none; }
 }
@@ -491,6 +491,54 @@ body {
 
 @media (min-width: 768px) {
   .step-grid { grid-template-columns: repeat(4, 1fr); gap: 32px; }
+}
+
+/* ---------- 區塊 6.5|免費資料 ---------- */
+
+.leadmag {
+  border: 1px solid var(--accent);
+  background: #fff;
+  padding: 40px 32px 36px;
+  text-align: center;
+}
+
+.leadmag-label {
+  font-size: 0.8125rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+}
+
+.leadmag-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(1.25rem, 4vw, 1.625rem);
+  color: var(--ink);
+  letter-spacing: 0.06em;
+  margin-top: 10px;
+}
+
+.leadmag-body {
+  margin-top: 24px;
+  text-align: left;
+}
+
+.leadmag-body p {
+  font-size: 0.9375rem;
+  margin-bottom: 14px;
+}
+
+.leadmag-body p:last-child { margin-bottom: 0; }
+
+.leadmag-btn { margin-top: 28px; }
+
+.leadmag-note {
+  margin-top: 16px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+@media (min-width: 768px) {
+  .leadmag { padding: 52px 56px 48px; }
 }
 
 /* ---------- 區塊 7|常見問題 ---------- */
