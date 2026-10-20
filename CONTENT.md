@@ -160,7 +160,30 @@ FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
 
 ---
 
-## 六、圖片資產與分享預覽
+## 六、短網址轉址頁
+
+四個轉址頁,點進去會自動跳轉到目的地並帶上追蹤參數。每個頁面是一個資料夾下的 `index.html`。
+
+| 路徑 | 檔案 | 跳轉到 | 用途 |
+|------|------|--------|------|
+| `/a1` | `a1/index.html` | 首頁 + `utm_campaign=a1` | FB 社團貼文 A1 |
+| `/a2` | `a2/index.html` | 首頁 + `utm_campaign=a2` | FB 社團貼文 A2 |
+| `/c` | `c/index.html` | 首頁 + `utm_campaign=c_level` | FB 社團貼文 C |
+| `/book` | `book/index.html` | 預約表單(來源預填「地區社團」) | 直接導到表單 |
+
+前三個的 utm 參數同為 `utm_source=facebook`、`utm_medium=group`,只有 `utm_campaign` 不同,在 GA4「流量開發」報表中可依此區分成效。
+
+`/book` 不帶 utm——它直接跳到 Google 表單,來源是靠表單本身的預填欄位(`entry.1670616827=地區社團`)記錄。
+
+**新增一個轉址頁:** 複製任一資料夾(例如 `a1/`),改資料夾名稱,再修改 `index.html` 中的**三處**網址——`meta refresh`、`location.replace`、以及備用連結的 `href`。三處要一致,否則不同瀏覽器會跳到不同地方。
+
+> 注意:HTML 屬性裡的 `&` 要寫成 `&amp;`(meta refresh 與 href),但 `<script>` 內的字串用一般的 `&`。
+
+**轉址頁不載入 GA4**,避免重複計算瀏覽量;追蹤是由目的地(首頁)負責。因此目前無法得知 `/book` 被點了幾次,若需要這個數字再另外處理。
+
+---
+
+## 七、圖片資產與分享預覽
 
 | 檔案 | 用途 |
 |------|------|
