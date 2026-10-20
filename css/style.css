@@ -4,6 +4,14 @@
    標題:Noto Serif TC/內文:Noto Sans TC
    ========================================================================== */
 
+/* 手寫字:簡語生活體(AbbrFesFont,SIL OFL 1.1,justfont)的子集,依授權改名;只含網站用到的字。
+   新增手寫句子後要重新產生字檔,否則缺字會變成一般字體。授權見 fonts/OFL-LICENSE.txt */
+@font-face {
+  font-family: "Yucheng Hand";
+  src: url("../fonts/yucheng-hand.woff2") format("woff2");
+  font-display: swap;
+}
+
 :root {
   --ink: #1d2d3f;        /* 深墨藍(主色) */
   --ink-deep: #14212f;   /* 更深的墨藍(hover、頁尾) */
@@ -12,7 +20,8 @@
   --line: #d9d3c6;       /* 細線 */
   --text: #333a41;       /* 內文 */
   --muted: #6e6a60;      /* 次要文字 */
-  --accent: #9a7b3a;     /* 深金(唯一點綴色) */
+  --accent: #9a7b3a;     /* 深金(主要點綴色) */
+  --pen: #b5352f;        /* 紅筆色:只用在手寫註記 */
 
   --serif: "Noto Serif TC", "PMingLiU", serif;
   --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
@@ -963,4 +972,149 @@ body {
   .mobile-cta-bar { display: flex; }
   .section { padding: 60px 0; }
   .hero { padding: 64px 0 72px; }
+}
+
+/* ---------- 2026-10-21 去模板感改版 ---------- */
+
+/* 手寫紅筆註記 */
+.hand-note {
+  margin-top: 40px;
+  text-align: center;
+  font-family: "Yucheng Hand", var(--serif);
+  font-size: clamp(1.375rem, 4vw, 1.75rem);
+  color: var(--pen);
+  transform: rotate(-1.5deg);
+}
+
+/* 兩個按鈕+分流說明 */
+.cta-choice {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.cta-option { display: flex; flex-direction: column; align-items: center; }
+.cta-option .btn { min-width: 200px; text-align: center; padding: 14px 28px; }
+.cta-hint {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.section-cta .cta-choice { margin-top: 8px; }
+
+/* 區塊副標 */
+.section-lead {
+  text-align: center;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-top: -16px;
+}
+.section-title + .section-lead { margin-top: 24px; }
+.section-lead + * { margin-top: 36px; }
+
+/* 我們怎麼教 */
+.method-list {
+  list-style: none;
+  counter-reset: method;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+.method-item {
+  counter-increment: method;
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  column-gap: 12px;
+  padding: 24px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.method-item::before {
+  content: counter(method);
+  grid-row: span 2;
+  font-family: "Yucheng Hand", var(--serif);
+  font-size: 2.25rem;
+  line-height: 1;
+  color: var(--pen);
+}
+.method-item h3 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.1875rem;
+  color: var(--ink);
+}
+.method-item p { margin-top: 6px; }
+@media (min-width: 768px) {
+  .method-list { grid-template-columns: 1fr 1fr; column-gap: 56px; }
+}
+
+/* 免費資料(首頁) */
+.freebie {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  align-items: center;
+}
+.freebie-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(1.375rem, 4vw, 1.75rem);
+  color: var(--ink);
+  margin: 8px 0 18px;
+}
+.freebie-text p + p { margin-top: 12px; }
+.freebie-btns {
+  margin-top: 26px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.text-link {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 2px;
+}
+.text-link::after { content: " \2192"; color: var(--accent); }
+.freebie .leadmag-note { margin-top: 14px; }
+.freebie-pages { position: relative; height: 300px; }
+.freebie-pages img {
+  position: absolute;
+  width: 46%;
+  max-width: 240px;
+  height: auto;
+  box-shadow: 0 6px 18px rgba(20, 33, 47, 0.14);
+  border: 1px solid var(--line);
+}
+.freebie-pages img:first-child { left: 2%; top: 10px; transform: rotate(-4deg); }
+.freebie-pages img:last-child { left: 50%; top: 30px; transform: rotate(3deg); }
+@media (min-width: 768px) {
+  .freebie { grid-template-columns: 1.1fr 1fr; gap: 56px; }
+  .freebie-pages { height: 400px; }
+}
+
+/* 老師的紅筆 */
+.redpen-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.redpen-grid img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .redpen-grid { grid-template-columns: 1fr 1fr; }
+  .redpen-grid img:last-child { display: none; }
+}
+
+/* 手機不顯示嵌入表單,改用按鈕 */
+#contact .form-embed { margin-top: 48px; }
+@media (max-width: 767px) {
+  #contact .form-embed { display: none; }
 }
