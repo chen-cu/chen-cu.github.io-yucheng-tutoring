@@ -964,3 +964,94 @@ body {
   .section { padding: 60px 0; }
   .hero { padding: 64px 0 72px; }
 }
+
+/* ---------- 學習專欄 ---------- */
+
+.page-label a { color: inherit; text-decoration: none; }
+.page-label a:hover { text-decoration: underline; }
+
+.article-title { font-size: clamp(1.375rem, 4vw, 2rem); }
+
+.article-body > p { margin-bottom: 18px; }
+
+.article-body h2 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(1.1875rem, 3vw, 1.375rem);
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  margin: 44px 0 16px;
+  padding-left: 14px;
+  border-left: 3px solid var(--accent);
+}
+
+.article-points { margin: 0 0 18px 1.4em; }
+.article-points li { margin-bottom: 10px; padding-left: 4px; }
+.article-points b { color: var(--ink); }
+
+.article-facts {
+  margin-top: 40px;
+  background: var(--paper-alt);
+  padding: 20px 24px;
+  font-size: 0.9375rem;
+}
+.article-facts p + p { margin-top: 4px; }
+.article-facts b { color: var(--ink); }
+.article-facts-note { font-size: 0.8125rem; color: var(--muted); }
+
+.article-sign {
+  margin-top: 40px;
+  text-align: right;
+  font-family: var(--serif);
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.9375rem;
+}
+
+.article-related {
+  margin-top: 14px;
+  font-family: var(--serif);
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+}
+
+.article-more { margin-top: 56px; }
+.article-more-title {
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.article-more ul, .article-mini-list { list-style: none; border-top: 1px solid var(--line); }
+.article-more li, .article-mini-list li { border-bottom: 1px solid var(--line); }
+.article-more a, .article-mini-list a {
+  display: block;
+  padding: 14px 4px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.article-more a:hover, .article-mini-list a:hover { color: var(--accent); }
+
+.article-list { list-style: none; display: grid; gap: 20px; }
+.article-card a {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--line);
+  padding: 26px 28px;
+  text-decoration: none;
+  transition: border-color 0.2s;
+}
+.article-card a:hover { border-color: var(--accent); }
+.article-card-label { display: block; font-size: 0.8125rem; letter-spacing: 0.2em; color: var(--accent); }
+.article-card-title {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.1875rem;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.article-card-desc { display: block; margin-top: 8px; font-size: 0.9375rem; color: var(--muted); }
