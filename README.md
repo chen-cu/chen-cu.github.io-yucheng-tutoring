@@ -1,6 +1,6 @@
 # 宇誠文理家教團|招生網站
 
-單頁式招生網站,純靜態 HTML/CSS/JS,無需建置流程,適合部署於 GitHub Pages。
+多頁式招生網站(首頁、師資團隊、課程與收費、免費資源、常見問題),純靜態 HTML/CSS/JS,無需建置流程,適合部署於 GitHub Pages。
 
 ## 部署到 GitHub Pages
 

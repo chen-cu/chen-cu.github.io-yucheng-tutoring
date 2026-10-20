@@ -1,89 +1,63 @@
 # 內容維護說明(CONTENT.md)
 
-本網站為單頁式招生網站,共 3 個主要檔案:
+本網站為多頁式招生網站(2026-10-20 由單頁改版),純靜態 HTML,無建置流程。
 
-| 檔案 | 內容 |
-|------|------|
-| `index.html` | 全部頁面文字(區塊 1–8)與版面結構 |
-| `css/style.css` | 全站樣式(配色、字體、排版) |
-| `js/main.js` | 手機浮動按鈕的自動隱藏行為 |
+## 零、檔案與頁面
 
----
+| 網址 | 檔案 | 內容 |
+|------|------|------|
+| `/` | `index.html` | 首頁:Hero、痛點、四大優勢+服務概況、師資預覽、四步驟、免費資料預覽、常見問題(3 題)、表單 |
+| `/teachers/` | `teachers/index.html` | 師資完整介紹、老師怎麼安排 |
+| `/courses/` | `courses/index.html` | 課程分班、英語口說・發音課程、上課方式、收費方式、四步驟 |
+| `/resources/` | `resources/index.html` | 《錯題,不是粗心。》介紹與試讀、段考考卷免費分析 |
+| `/faq/` | `faq/index.html` | 完整九題常見問題 |
+| — | `css/style.css` | 全站樣式 |
+| — | `js/main.js` | 手機浮動按鈕自動隱藏、GA4 點擊事件 |
+| — | `sitemap.xml` | 給 Google 的頁面清單(新增頁面時要加) |
 
-## 一、每個區塊的文字位置
+**五頁共用、改一處要改五頁的部分:**
+- `<head>`(GA4、og 預覽、字型)
+- 頁首導覽(`<!-- 頁首導覽 -->`)與頁尾(`<!-- 頁尾 -->`)
+- 手機底部浮動按鈕列
 
-所有區塊都在 `index.html`,由上而下依序排列,每個區塊前有 `<!-- 區塊 N -->` 註解可供搜尋:
+子頁在資料夾裡,所以子頁的 css/js/圖示路徑前面要加 `../`(首頁不用)。目前所在頁面的選單項目有 `aria-current="page"`,會顯示金色底線。
 
-| 區塊 | 位置(搜尋關鍵字) | 說明 |
-|------|--------------------|------|
-| 區塊 1|首屏 Hero | `<!-- ============ 區塊 1` | 主標題在 `<h1 class="hero-title">`,副標題在 `.hero-sub`,信任標語在 `.trust-badge`,按鈕小字在 `.cta-note` |
-| 區塊 2|痛點共鳴 | `<!-- ============ 區塊 2` | 三個情境各為一個 `<div class="pain-item">`,收尾句在 `.section-closing` |
-| 區塊 3|四大核心優勢 | `<!-- ============ 區塊 3` | 四項優勢各為一個 `<div class="advantage-item">` |
-| 區塊 4|課程規劃 | `<!-- ============ 區塊 4` | 國中/高中分班在兩個 `<div class="course-col">`,收費方式在 `.pricing-list`,英語口說・發音課程在 `.course-desc`(見下方說明) |
-| 區塊 5|師資陣容 | `<!-- ============ 區塊 5` | 每位老師為一個 `<article class="teacher-card">`,直接在 HTML 中新增或修改(見下方說明) |
-| 區塊 6|試教流程 | `<!-- ============ 區塊 6` | 四步驟各為一個 `<li class="step-item">` |
-| 區塊 7|常見問題 | `<!-- ============ 區塊 7` | 每題為一個 `<details class="faq-item">`(見下方說明) |
-| 區塊 8|最終 CTA | `<!-- ============ 區塊 8` | 主文案、副文案、Google 表單 iframe;頁尾文字在 `<footer class="site-footer">` |
+**同一內容出現在兩頁的地方(改一邊記得改另一邊):**
 
-**Google 表單網址**(`https://docs.google.com/forms/d/e/1FAIpQLSfV0DgDnflbURkFvsO0v_cIA_NW4LYOoRU7bpcnkXyn4XZO6g/viewform?usp=pp_url&entry.1670616827=%E5%AE%98%E6%96%B9%E7%B6%B2%E7%AB%99`)出現在以下位置,更換時請全域搜尋取代:
-- 頁首按鈕、Hero 區次按鈕、區塊 4 按鈕、區塊 8 iframe 與次按鈕、手機底部浮動按鈕列「預約試教」
+| 內容 | 位置 1 | 位置 2 |
+|------|--------|--------|
+| 老師 | `teachers/` 完整卡片 | 首頁師資預覽一行簡介(`teacher-mini`) |
+| 常見問題 Q1、Q3、Q8 | `faq/` | 首頁常見問題預覽 |
+| 四步驟 | 首頁 | `courses/` |
+| 免費資料說明 | 首頁 `#freebie` | `resources/` |
 
-**LINE 加好友連結**(`https://lin.ee/oPeCDkw`)出現在以下位置,更換時同樣全域搜尋取代:
-- Hero 區主按鈕「加 LINE 免費諮詢」、區塊 8 主按鈕「加 LINE 免費諮詢」、手機底部浮動按鈕列「加 LINE 諮詢」、頁尾「加好友」連結
+## 一、文字位置
 
-> 表單嵌入備註:目前 iframe 使用完整 docs.google.com 網址(含 `entry.` 預填參數)。iframe 高度可在 `css/style.css` 的 `.form-embed iframe { height: 1150px; }` 調整。若日後更換表單,請在 `index.html` 全域搜尋取代整條連結(含 `?usp=…&entry.…` 參數)。
+每個區塊前都有 `<!-- ============ 區塊名稱 ============ -->` 註解,在對應檔案中搜尋即可。
+
+**Google 表單網址**(`…viewform?usp=pp_url&entry.1670616827=%E5%AE%98%E6%96%B9%E7%B6%B2%E7%AB%99`,來源預填「官方網站」)與 **LINE 連結**(`https://lin.ee/oPeCDkw`)散在五頁,更換時請對整個資料夾全域搜尋取代。
+
+> 表單 iframe 只在首頁 `#contact`。高度在 `css/style.css` 的 `.form-embed iframe { height: 1150px; }`。
 
 ---
 
 ## 二、如何新增一位老師
 
-打開 `index.html`,搜尋 `區塊 5`,找到 `<div class="teacher-grid">` 內的老師卡片。每位老師是一個 `<article>` 區塊:
-
-```html
-<article class="teacher-card">
-  <h3 class="teacher-name">Andy 老師</h3>
-  <span class="teacher-subject">數學・社會科</span>
-  <p class="teacher-bio">介紹文字寫在這裡。</p>
-</article>
-```
-
-**新增步驟:**
-
-1. 複製上方任一個 `<article class="teacher-card">…</article>` 區塊。
-2. 貼在最後一張卡片的 `</article>` 之後(仍在 `<div class="teacher-grid">` 裡面)。
-3. 修改 `teacher-name`(姓名)、`teacher-subject`(科目)、`teacher-bio`(介紹)三處文字。
-4. 存檔並推送,卡片就會出現在師資區,無須改動 CSS 或 JS。
-
-刪除或調整老師順序,同樣直接在 HTML 中操作即可。
+1. `teachers/index.html`:複製任一個 `<article class="teacher-card">…</article>`,貼在最後一張之後,改姓名、科目、介紹。
+2. `index.html` 師資預覽:複製一個 `<li class="teacher-mini">`,寫一行 20 字內簡介。
+3. `index.html` 服務概況:「授課師資」人數 +1。
 
 ---
 
-## 二之二、英語口說・發音課程（區塊 4）
+## 二之二、英語口說・發音課程
 
-此課程項目位於區塊 4「課程規劃」內,在「收費方式」之後、section CTA 之前。結構如下:
-
-```html
-<h3 class="subsection-title">英語口說・發音課程</h3>
-<p class="course-subtitle">線上一對一 ｜ 國小・國中</p>
-<div class="course-desc">
-  <p>課程介紹段落……</p>
-</div>
-<div class="btn-group course-cta-buttons">
-  <a class="btn btn-primary" href="LINE 連結">加 LINE 免費諮詢</a>
-  <a class="btn btn-outline" href="表單連結">免費預約試教</a>
-</div>
-```
-
-- **修改課程介紹**:編輯 `.course-desc` 內各 `<p>` 段落的文字。
-- **修改副標**:編輯 `.course-subtitle` 的文字（如調整適用年級）。
-- **刪除此課程**:刪除從 `<h3 class="subsection-title">英語口說・發音課程</h3>` 到 `</div><!-- course-cta-buttons -->` 之間的所有內容。
-- **新增類似的獨立課程**:複製上方整組結構（`<h3>` + `.course-subtitle` + `.course-desc` + `.btn-group`），貼在收費方式區塊之後,修改標題、副標與內容即可。
+位於 `courses/index.html` 的「課程規劃」區塊內,結構為 `<h3 class="subsection-title">` + `.course-subtitle` + `.course-desc` + 按鈕。刪除或新增類似課程時,整組複製或刪除即可。
 
 ---
 
-## 三、如何修改 FAQ（區塊 7）
+## 三、如何修改 FAQ
 
-FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
+完整九題在 `faq/index.html`,首頁另有三題預覽(Q1 費用、Q8 試教、Q3 請假)。每一題是一個 `<details class="faq-item">`:
 
 ```html
 <details class="faq-item">
@@ -92,12 +66,7 @@ FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
 </details>
 ```
 
-- **修改問題**:改 `<summary>` 內的文字。
-- **修改答案**:改 `.faq-answer` 內 `<p>` 的文字;答案若有多段,可放多個 `<p>`。
-- **新增一題**:複製整個 `<details class="faq-item">…</details>` 區塊,貼在最後一題之後,再修改文字。題號(Q1、Q2……)需手動調整。
-- **刪除一題**:刪除該題整個 `<details>` 區塊即可。
-
-手風琴的展開/收合為瀏覽器原生行為(`<details>` 標籤),不需要 JavaScript,新增題目不會壞。
+新增、刪除題目直接操作 `<details>` 區塊,題號需手動調整。展開收合為瀏覽器原生行為,不需要 JavaScript。
 
 ---
 
@@ -111,7 +80,7 @@ FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
 
 ## 服務概況(區塊 3 下方)
 
-位置:`index.html` 搜尋 `class="record"`。三項各為一個 `<div class="record-item">`,桌機三欄、手機單欄。
+位置:`index.html` 搜尋 `class="record"`(只在首頁)。三項各為一個 `<div class="record-item">`,桌機三欄、手機單欄。
 
 目前放的是**服務範圍事實**,不是業績數字:授課師資人數、上課方式、授課科目。
 
@@ -131,21 +100,23 @@ FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
 
 ---
 
-## 免費資料(區塊 6.5)
+## 免費資料
 
-位置:`index.html` 搜尋 `class="leadmag"`,位於試教流程與常見問題之間。
+位置:首頁 `#freebie`(精簡版)與 `resources/index.html`(完整介紹、目錄、試讀、考卷分析)。
 
 用途:提供免費資料作為誘因,引導家長加 LINE(與 IG 導流共用同一個入口)。領取方式是加 LINE 後索取,網站本身不放 PDF 檔。
 
 - **換一份資料**:改 `.leadmag-title`(書名)與 `.leadmag-body` 內的段落即可,按鈕與樣式不用動
-- **目前文案為初版草稿**,請依 PDF 實際內容調整
+- `resources/` 的目錄與試讀內容摘自 PDF《錯題,不是粗心。》,換資料時要一起改
 - 按鈕連的是 LINE 官方帳號,與全站其他 LINE 連結相同
 
 ---
 
 ## 五、流量追蹤(Google Analytics 4)
 
-追蹤碼位於 `index.html` 的 `<head>` 最上方,評估 ID 為 `G-68QYFS7PCG`,在該段落中出現**兩處**(script 網址與 `gtag('config', ...)`),更換 GA4 資源時兩處都要改。
+追蹤碼位於**每一頁**的 `<head>` 最上方,評估 ID 為 `G-68QYFS7PCG`,每頁出現**兩處**(script 網址與 `gtag('config', ...)`),更換 GA4 資源時五頁共十處都要改。
+
+**點擊事件(`js/main.js`):** 點任何 LINE 連結送出 `line_click`,點任何預約表單連結送出 `booking_click`,附帶按鈕文字(`link_text`)與所在頁面(`page_path`)。要在 GA4 計算轉換,需到「管理 → 事件」把這兩個事件標記為「關鍵事件」(一次性設定,事件要先被觸發過一次才會出現在清單裡)。
 
 - IG、FB 連結帶的 `utm_source`、`utm_medium` 等參數,GA4 會自動歸類到「流量開發」報表,不需額外設定
 - 查看即時數據:GA4 後台 →「報表」→「即時」
@@ -184,6 +155,6 @@ FAQ 在 `index.html` 的區塊 7,每一題是一個 `<details>` 元素:
 | `favicon-32.png`、`favicon-512.png` | 瀏覽器分頁圖示 |
 | `apple-touch-icon.png` | iOS 加入主畫面時的圖示(180×180) |
 
-**網址設定:** `index.html` 的 `<head>` 內有三處絕對網址(`canonical`、`og:url`、`og:image`),目前指向 `https://chen-cu.github.io/chen-cu.github.io-yucheng-tutoring/`。若日後改用自訂網域,這三處都要一併更新,否則分享預覽圖會失效。
+**網址設定:** 每一頁的 `<head>` 內有三處絕對網址(`canonical`、`og:url`、`og:image`),目前指向 `https://chen-cu.github.io/chen-cu.github.io-yucheng-tutoring/`。若日後改用自訂網域,五頁都要更新,`sitemap.xml`、`robots.txt` 與四個短網址轉址頁也要一起改。
 
 **重做圖片:** 這些圖是用網站同一套字型(Noto Serif TC)與配色算出來的。要改內容的話,重新產圖即可,原始樣板在對話紀錄中。
