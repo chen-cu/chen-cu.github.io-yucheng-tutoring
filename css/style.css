@@ -397,6 +397,61 @@ body {
 
 .course-cta-buttons { margin-top: 24px; }
 
+/* ---------- 區塊 4.5|學習諮詢 ---------- */
+
+.consult-lead {
+  text-align: center;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-top: -24px;
+}
+
+.consult-card {
+  margin-top: 36px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--accent);
+  padding: 32px 28px 30px;
+}
+
+.consult-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.3125rem;
+  color: var(--ink);
+  letter-spacing: 0.06em;
+}
+
+.consult-role {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 2px;
+}
+
+.consult-edu {
+  margin-top: 10px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.consult-body { margin-top: 20px; }
+
+.consult-body p {
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  margin-bottom: 14px;
+}
+
+.consult-body p:last-child { margin-bottom: 0; }
+
+@media (min-width: 768px) {
+  .consult-card { padding: 40px 44px 38px; }
+}
+
 /* ---------- 區塊 5|師資陣容 ---------- */
 
 .teacher-grid {
