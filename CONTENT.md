@@ -66,7 +66,9 @@
 </details>
 ```
 
-新增、刪除題目直接操作 `<details>` 區塊,題號需手動調整。展開收合為瀏覽器原生行為,不需要 JavaScript。
+新增、刪除題目直接操作 `<details>` 區塊,題號需手動調整。
+
+**結構化資料:** `faq/index.html` 的 `<head>` 有一段 `application/ld+json`(FAQPage),內容是九題的文字副本,給搜尋引擎讀。改題目或答案時,這段也要同步改;首頁 `<head>` 另有一段機構資訊(EducationalOrganization),改品牌名稱、網址或 LINE 時一起改。展開收合為瀏覽器原生行為,不需要 JavaScript。
 
 ---
 
