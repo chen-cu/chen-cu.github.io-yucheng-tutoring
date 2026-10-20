@@ -124,6 +124,7 @@
 | `/a1` | `a1/index.html` | 首頁 + `utm_campaign=a1` | FB 社團貼文 A1 |
 | `/a2` | `a2/index.html` | 首頁 + `utm_campaign=a2` | FB 社團貼文 A2 |
 | `/c` | `c/index.html` | 首頁 + `utm_campaign=c_level` | FB 社團貼文 C |
+| `/ig` | `ig/index.html` | 首頁 + `utm_source=instagram&utm_medium=social&utm_campaign=bio` | IG 個人檔案連結 |
 | `/book` | `book/index.html` | 預約表單(來源預填「地區社團」) | 直接導到表單 |
 
 前三個的 utm 參數同為 `utm_source=facebook`、`utm_medium=group`,只有 `utm_campaign` 不同,在 GA4「流量開發」報表中可依此區分成效。
