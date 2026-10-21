@@ -117,13 +117,14 @@
 
 ## 六、短網址轉址頁
 
-四個轉址頁,點進去會自動跳轉到目的地並帶上追蹤參數。每個頁面是一個資料夾下的 `index.html`。
+六個轉址頁,點進去會自動跳轉到目的地並帶上追蹤參數。每個頁面是一個資料夾下的 `index.html`。
 
 | 路徑 | 檔案 | 跳轉到 | 用途 |
 |------|------|--------|------|
 | `/a1` | `a1/index.html` | 首頁 + `utm_campaign=a1` | FB 社團貼文 A1 |
 | `/a2` | `a2/index.html` | 首頁 + `utm_campaign=a2` | FB 社團貼文 A2 |
 | `/c` | `c/index.html` | 首頁 + `utm_campaign=c_level` | FB 社團貼文 C |
+| `/fb` | `fb/index.html` | 首頁 + `utm_source=facebook&utm_medium=social&utm_campaign=page` | FB 粉專貼文、個人帳號貼文 |
 | `/ig` | `ig/index.html` | 首頁 + `utm_source=instagram&utm_medium=social&utm_campaign=bio` | IG 個人檔案連結 |
 | `/book` | `book/index.html` | 預約表單(來源預填「地區社團」) | 直接導到表單 |
 
