@@ -170,3 +170,16 @@
 | `fonts/yucheng-hand.woff2` | 手寫紅筆字(簡語生活體子集,OFL 授權,已依規定改名;授權在 `fonts/OFL-LICENSE.txt`)。只含網站上手寫句子用到的字,**新增或修改 `class="hand-note"` 的句子後要重新產生字檔**,請 Claude 處理。字型裡的「來」會顯示成簡體,手寫句子不要用「來」 |
 | `img/errors-*.jpg` | 《錯題,不是粗心。》頁面縮圖(首頁免費資料區) |
 | `img/redpen-*.jpg` | IG「老師的紅筆」圖卡(首頁老師的紅筆區) |
+
+## 免費資源下載連結（/dl/）
+
+PDF 放在 `files/`，對外一律給 `/dl/` 的連結（LINE 自動回覆用）。`/dl/` 頁面會先記一次 GA 事件 `resource_download`（參數 resource），再跳轉到 PDF，所以 GA 看得到每份資料被領了幾次。網站本身不放這些連結，維持「加 LINE 領取」。
+
+| 連結 | 檔案 | 內容 |
+|------|------|------|
+| `/dl/errors/` | `files/errors-not-careless.pdf` | 《錯題，不是粗心。》 |
+| `/dl/sheet/` | `files/error-sorting-sheet.pdf` | 段考錯題分類表 |
+| `/dl/cap/` | `files/cap-countdown.pdf` | 《會考，從現在排起。》 |
+| `/dl/gsat/` | `files/gsat-last-30-days.pdf` | 《學測前，最後 30 天。》 |
+
+PDF 更新時，直接覆蓋 `files/` 裡同名的檔案，連結不用改。
