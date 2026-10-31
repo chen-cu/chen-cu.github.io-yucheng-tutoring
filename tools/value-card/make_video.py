@@ -50,7 +50,7 @@ def glyph_layer(ch, xy, font, color):
     return lay
 
 
-def write_text(ink, s, xs, y, font, color, t, rnd, per_comp=0.07, gap=0.05):
+def write_text(ink, s, xs, y, font, color, t, rnd, per_comp=0.07, gap=0.05, jit=(0.01, 0.04)):
     """逐字逐筆畫寫出;xs 為每個字的 x 座標。回傳寫完的時間。"""
     for ch, x in zip(s, xs):
         if ch.strip() == '':
@@ -72,7 +72,7 @@ def write_text(ink, s, xs, y, font, color, t, rnd, per_comp=0.07, gap=0.05):
             else:
                 prog = np.tile((np.arange(h, dtype=np.float32) / max(h - 1, 1))[:, None], (1, w))
             sub = tp[sl]; sub[m] = t + prog[m] * dur; tp[sl] = sub
-            t += dur + rnd.uniform(0.01, 0.04)
+            t += dur + rnd.uniform(*jit)
         # 反鋸齒邊緣:歸給最近的筆畫
         idx = ndimage.distance_transform_edt(~np.isfinite(tp), return_distances=False, return_indices=True)
         tp = tp[idx[0], idx[1]]

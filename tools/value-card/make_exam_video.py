@@ -3,7 +3,7 @@
 用法:
   python3 make_exam_video.py exam.json 輸出資料夾
 exam.json:單題物件或陣列,格式見 Google 文件「宇誠 真題 Reels 規則（Gemini 用）」第五節。
-畫面順序:hook → 題目 → 選項(停頓) → 錯誤算法 + 紅 ✗ → 正解 → 圈正確選項 → 判斷法紅底線 → 署名
+畫面順序:hook → 題目(整行掃出) → 選項(停頓) → 錯誤算法 + 紅 ✗ → 正解 → 圈正確選項 → 判斷法紅底線 → 署名
 """
 import sys, os, json, random
 import numpy as np
@@ -51,11 +51,20 @@ def build(q):
     def write(s, row, size, color, t, pc, g, x=X0):
         f = mc.hf(size)
         xs = [x + dm.textlength(s[:k], font=f) for k in range(len(s))]
-        return mv.write_text(ink, s, xs, rule_y(row) - 12 - mv.OFF + mv.OFF, f, color, t, rnd, pc, g)
+        return mv.write_text(ink, s, xs, rule_y(row) - 12, f, color, t, rnd, pc, g, (0.004, 0.015))
+
+    def wipe(s, row, size, color, t, x=X0, dur=0.35):
+        """題目與選項:整行由左往右快速掃出(手寫留給錯誤算法與正解)"""
+        f = mc.hf(size); lay = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(lay).text((x, rule_y(row) - 12), s, font=f, fill=color, anchor='ls')
+        w = max(dm.textlength(s, font=f), 1)
+        tp = np.tile(t + np.clip((np.arange(W, dtype=np.float32) - x) / w, 0, 1) * dur, (H, 1))
+        ink.add(lay, tp)
+        return t + dur
 
     t = 0.3
     t = write(q['hook'], 1, 66, mc.RED, t, 0.04, 0.05) + 0.25
-    t = write(f"{q['series']} No.{q['no']:03d}  {q['exam']} {q['q_no']}", 2, 34, mc.GREY, t, 0.008, 0.004) + 0.3
+    t = wipe(f"{q['series']} No.{q['no']:03d}  {q['exam']} {q['q_no']}", 2, 34, mc.GREY, t) + 0.3
     row = 3
     brace = []
     for s in q['question']:
@@ -68,18 +77,18 @@ def build(q):
                        (x + 5, bot - 12), (x + 16, bot)]
                 t = mv.draw_path(ink, pts, mc.INK, 4, t, 0.3) + 0.05
             brace.append(row)
-            t = write(s.lstrip('{ '), row, 50, mc.INK, t, 0.014, 0.01, X0 + 44) + 0.05
+            t = wipe(s.lstrip('{ '), row, 50, mc.INK, t, X0 + 44) + 0.05
         else:
-            t = write(s, row, 50, mc.INK, t, 0.014, 0.01) + 0.05
+            t = wipe(s, row, 50, mc.INK, t) + 0.05
         row += 1
     # 選項:兩欄
     f50 = mc.hf(50); opt_xy = {}
     for i, s in enumerate(q['options']):
         r, x = row + i // 2, X0 + (i % 2) * 400
         opt_xy[s[1]] = (x, rule_y(r), x + dm.textlength(s, font=f50))
-        t = write(s, r, 50, mc.INK, t, 0.014, 0.01, x) + 0.05
+        t = wipe(s, r, 50, mc.INK, t, x, 0.25) + 0.05
     row += (len(q['options']) + 1) // 2
-    t += 1.2                                   # 讓觀眾想一下
+    t += 1.5                                   # 讓觀眾想一下
     # 錯誤算法
     t = write('錯誤算法', row, 40, mc.RED, t, 0.02, 0.02) + 0.15; row += 1
     wr0 = row; wmax = 0
