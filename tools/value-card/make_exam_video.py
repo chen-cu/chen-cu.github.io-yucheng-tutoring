@@ -24,39 +24,51 @@ def rule_y(n): return TOP + GAP * n
 # ---- 旁白(Piper 本機語音 zh_CN-chaowen-medium,溫和男聲) ----
 VOICE_DIR = os.path.expanduser('~/.cache/yucheng-voice')
 VOICE = os.path.join(VOICE_DIR, 'zh_CN-chaowen-medium.onnx')
-LETTER = {'x': '艾克斯', 'y': '歪', 'a': '欸', 'b': '逼', 'A': '欸', 'B': '逼', 'C': '西', 'D': '低'}
-_voice = None
+EN_VOICE = os.path.join(VOICE_DIR, 'en_US-ryan-medium.onnx')
+LETTER = {'x': 'ex', 'y': 'why', 'a': 'ay', 'b': 'bee', 'c': 'see', 'd': 'dee'}
+_voices = {}
+
+
+def _voice(path, url):
+    if path not in _voices:
+        if not os.path.exists(path):
+            os.makedirs(VOICE_DIR, exist_ok=True)
+            for ext in ('', '.json'):
+                subprocess.run(['curl', '-sSL', '-o', path + ext, url + ext], check=True)
+        from piper import PiperVoice
+        _voices[path] = PiperVoice.load(path)
+    return _voices[path]
+
+
+def _synth(v, text, scale):
+    from piper import SynthesisConfig
+    a = np.concatenate([c.audio_float_array for c in v.synthesize(text, syn_config=SynthesisConfig(length_scale=scale))])
+    nz = np.nonzero(np.abs(a) > 0.02)[0]            # 去掉前後靜音
+    return a[max(nz[0] - 300, 0): nz[-1] + 300] if len(nz) else a
 
 
 def tts(text, out):
-    """產生旁白 wav,回傳秒數。單獨的英文字母換成中文念法(模型不會念字母)。"""
-    global _voice
+    """中文用 chaowen 男聲,英文字母(變數、選項)改用英文男聲 ryan 念,接在一起。回傳秒數。"""
     import re, wave
-    if _voice is None:
-        if not os.path.exists(VOICE):
-            os.makedirs(VOICE_DIR, exist_ok=True)
-            base = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/chaowen/medium/'
-            for ext in ('', '.json'):
-                subprocess.run(['curl', '-sSL', '-o', VOICE + ext, base + 'zh_CN-chaowen-medium.onnx' + ext], check=True)
-        from piper import PiperVoice
-        _voice = PiperVoice.load(VOICE)
-    spoken = re.sub(r'(?<![A-Za-z])[A-Da-dxy](?![A-Za-z])', lambda m: LETTER.get(m.group(), m.group()), text)
-    from piper import SynthesisConfig
+    zh = _voice(VOICE, 'https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/chaowen/medium/zh_CN-chaowen-medium.onnx')
+    en = _voice(EN_VOICE, 'https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/medium/en_US-ryan-medium.onnx')
+    sr = zh.config.sample_rate; gap = np.zeros(int(sr * 0.04), np.float32); parts = []
+    for tok in re.findall(r'[A-Za-z]|[^A-Za-z]+', text):
+        if re.fullmatch(r'[A-Za-z]', tok):
+            seg = _synth(en, LETTER.get(tok.lower(), tok), 0.9)
+            ref = np.sqrt(np.mean(parts[-1] ** 2)) if parts else 0.1
+            seg = seg * min(ref / (np.sqrt(np.mean(seg ** 2)) + 1e-6), 2.0)   # 音量對齊中文
+        elif tok.strip(' ，,'):
+            seg = _synth(zh, tok, 0.88)
+            if tok[-1] in '，,。？！': seg = np.concatenate([seg, np.zeros(int(sr * 0.18), np.float32)])
+        else:
+            continue
+        parts += [seg, gap]
+    a = np.concatenate(parts)
+    pcm = (np.clip(a, -1, 1) * 32767).astype(np.int16)
     with wave.open(out, 'wb') as w:
-        _voice.synthesize_wav(spoken, w, syn_config=SynthesisConfig(length_scale=0.88))
-    with wave.open(out) as w:
-        return w.getnframes() / w.getframerate()
-
-
-def paper(seed):
-    rnd = np.random.default_rng(seed)
-    a = np.ones((H, W, 3), np.float32) * np.array((249, 247, 241), np.float32)
-    a += rnd.normal(0, 2.4, (H, W, 1))
-    img = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)); d = ImageDraw.Draw(img)
-    for y in range(TOP, H - 30, GAP):
-        d.line([(0, y), (W, y)], fill=mc.RULE, width=2)
-    d.line([(128, 0), (128, H)], fill=(228, 156, 150), width=2)
-    return np.asarray(img).astype(np.float32)
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(pcm.tobytes())
+    return len(pcm) / sr
 
 
 def check(q):
