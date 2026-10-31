@@ -26,7 +26,7 @@ VOICE_DIR = os.path.expanduser('~/.cache/yucheng-voice')
 VOICE = os.path.join(VOICE_DIR, 'zh_CN-chaowen-medium.onnx')
 KOKORO = os.path.join(VOICE_DIR, 'kokoro-multi-lang-v1_1')
 KOKORO_URL = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_1.tar.bz2'
-SPEAKER, SEC_PER_CHAR = 58, 0.2    # 每字約 0.2 秒(每秒 5 字,溫和偏快);          # 2026-11-01 使用者試聽 4 個男聲後選定(溫和、像國中數學老師)
+SPEAKER, SEC_PER_CHAR = 58, 0.22   # 目標每字約 0.22 秒;每句只在 0.9~1.15 倍間微調          # 2026-11-01 使用者試聽 4 個男聲後選定(溫和、像國中數學老師)
 _tts = None
 
 
@@ -45,27 +45,20 @@ def tts(text, out):
             dict_dir=D + 'dict', lexicon=D + 'lexicon-us-en.txt,' + D + 'lexicon-zh.txt'), num_threads=4),
             rule_fsts=D + 'phone-zh.fst,' + D + 'date-zh.fst,' + D + 'number-zh.fst')
         _tts = so.OfflineTts(cfg)
-    import re, tempfile
-    sr = None; parts = []; tmpd = tempfile.mkdtemp()
-    for k, (seg, punct) in enumerate(re.findall(r'([^，,。？！?!]+)([，,。？！?!]?)', text)):
-        seg = seg.strip()
-        if not seg: continue
-        g = _tts.generate(seg, sid=SPEAKER, speed=1.0)
-        a = np.array(g.samples, np.float32); sr = g.sample_rate
+    import re
+    sr = None; parts = []
+    for sent in re.findall(r'[^。？！?!]+[。？！?!]?', text):      # 只在句尾斷,整句念才保留語氣
+        sent = sent.strip()
+        if not sent: continue
+        g = _tts.generate(sent, sid=SPEAKER, speed=1.0); sr = g.sample_rate
+        weight = sum(1 if '\u4e00' <= c <= '\u9fff' or c.isdigit() else 1.2 for c in sent if c.isalnum())
+        if weight >= 6:                                          # 短句不調速
+            sp = min(max((len(g.samples) / sr) / (weight * SEC_PER_CHAR), 0.9), 1.15)
+            if abs(sp - 1) > 0.03: g = _tts.generate(sent, sid=SPEAKER, speed=sp)
+        a = np.array(g.samples, np.float32)
         nz = np.nonzero(np.abs(a) > 0.01)[0]
-        if len(nz): a = a[max(nz[0] - 200, 0): nz[-1] + 200]
-        # 每句調成固定字速:中文字算 1、英文字母算 1.2、數字算 1
-        weight = sum(1 if '\u4e00' <= c <= '\u9fff' or c.isdigit() else 1.2 for c in seg if c.isalnum())
-        want = max(weight, 2) * SEC_PER_CHAR
-        rate = min(max((len(a) / sr) / want, 0.75), 1.5)       # >1 加快、<1 放慢
-        f_in, f_out = f'{tmpd}/i{k}.wav', f'{tmpd}/o{k}.wav'
-        import wave as _w
-        with _w.open(f_in, 'wb') as w:
-            w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes((np.clip(a, -1, 1) * 32767).astype(np.int16).tobytes())
-        subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', f_in, '-filter:a', f'atempo={rate:.3f}', f_out], check=True)
-        with _w.open(f_out) as w: seg_a = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32767
-        pause = {'，': 0.22, ',': 0.22, '。': 0.4, '？': 0.45, '?': 0.45, '！': 0.4, '!': 0.4}.get(punct, 0.1)
-        parts += [seg_a, np.zeros(int(sr * pause), np.float32)]
+        if len(nz): a = a[max(nz[0] - 200, 0): nz[-1] + 300]
+        parts += [a, np.zeros(int(sr * 0.35), np.float32)]
     a = np.concatenate(parts)
     pcm = (np.clip(a, -1, 1) * 32767).astype(np.int16)
     with wave.open(out, 'wb') as w:
