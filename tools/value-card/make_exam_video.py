@@ -24,51 +24,33 @@ def rule_y(n): return TOP + GAP * n
 # ---- 旁白(Piper 本機語音 zh_CN-chaowen-medium,溫和男聲) ----
 VOICE_DIR = os.path.expanduser('~/.cache/yucheng-voice')
 VOICE = os.path.join(VOICE_DIR, 'zh_CN-chaowen-medium.onnx')
-EN_VOICE = os.path.join(VOICE_DIR, 'en_US-ryan-medium.onnx')
-LETTER = {'x': 'ex', 'y': 'why', 'a': 'ay', 'b': 'bee', 'c': 'see', 'd': 'dee'}
-_voices = {}
-
-
-def _voice(path, url):
-    if path not in _voices:
-        if not os.path.exists(path):
-            os.makedirs(VOICE_DIR, exist_ok=True)
-            for ext in ('', '.json'):
-                subprocess.run(['curl', '-sSL', '-o', path + ext, url + ext], check=True)
-        from piper import PiperVoice
-        _voices[path] = PiperVoice.load(path)
-    return _voices[path]
-
-
-def _synth(v, text, scale):
-    from piper import SynthesisConfig
-    a = np.concatenate([c.audio_float_array for c in v.synthesize(text, syn_config=SynthesisConfig(length_scale=scale))])
-    nz = np.nonzero(np.abs(a) > 0.02)[0]            # 去掉前後靜音
-    return a[max(nz[0] - 300, 0): nz[-1] + 300] if len(nz) else a
+KOKORO = os.path.join(VOICE_DIR, 'kokoro-multi-lang-v1_1')
+KOKORO_URL = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_1.tar.bz2'
+SPEAKER, SPEED = 58, 1.05          # 2026-11-01 使用者試聽 4 個男聲後選定(溫和、像國中數學老師)
+_tts = None
 
 
 def tts(text, out):
-    """中文用 chaowen 男聲,英文字母(變數、選項)改用英文男聲 ryan 念,接在一起。回傳秒數。"""
-    import re, wave
-    zh = _voice(VOICE, 'https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/chaowen/medium/zh_CN-chaowen-medium.onnx')
-    en = _voice(EN_VOICE, 'https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/medium/en_US-ryan-medium.onnx')
-    sr = zh.config.sample_rate; gap = np.zeros(int(sr * 0.04), np.float32); parts = []
-    for tok in re.findall(r'[A-Za-z]|[^A-Za-z]+', text):
-        if re.fullmatch(r'[A-Za-z]', tok):
-            seg = _synth(en, LETTER.get(tok.lower(), tok), 0.9)
-            ref = np.sqrt(np.mean(parts[-1] ** 2)) if parts else 0.1
-            seg = seg * min(ref / (np.sqrt(np.mean(seg ** 2)) + 1e-6), 2.0)   # 音量對齊中文
-        elif tok.strip(' ，,'):
-            seg = _synth(zh, tok, 0.88)
-            if tok[-1] in '，,。？！': seg = np.concatenate([seg, np.zeros(int(sr * 0.18), np.float32)])
-        else:
-            continue
-        parts += [seg, gap]
-    a = np.concatenate(parts)
+    """sherpa-onnx + Kokoro 多語模型:中文與英文字母(x、y、a、C、D)同一個男聲念。回傳秒數。"""
+    global _tts
+    import wave
+    if _tts is None:
+        if not os.path.exists(KOKORO):
+            os.makedirs(VOICE_DIR, exist_ok=True)
+            subprocess.run(f'curl -sSL {KOKORO_URL} | tar xj -C {VOICE_DIR}', shell=True, check=True)
+        import sherpa_onnx as so
+        D = KOKORO + '/'
+        cfg = so.OfflineTtsConfig(model=so.OfflineTtsModelConfig(kokoro=so.OfflineTtsKokoroModelConfig(
+            model=D + 'model.onnx', voices=D + 'voices.bin', tokens=D + 'tokens.txt', data_dir=D + 'espeak-ng-data',
+            dict_dir=D + 'dict', lexicon=D + 'lexicon-us-en.txt,' + D + 'lexicon-zh.txt'), num_threads=4),
+            rule_fsts=D + 'phone-zh.fst,' + D + 'date-zh.fst,' + D + 'number-zh.fst')
+        _tts = so.OfflineTts(cfg)
+    g = _tts.generate(text, sid=SPEAKER, speed=SPEED)
+    a = np.array(g.samples, np.float32)
     pcm = (np.clip(a, -1, 1) * 32767).astype(np.int16)
     with wave.open(out, 'wb') as w:
-        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(pcm.tobytes())
-    return len(pcm) / sr
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(g.sample_rate); w.writeframes(pcm.tobytes())
+    return len(pcm) / g.sample_rate
 
 
 def paper(seed):
