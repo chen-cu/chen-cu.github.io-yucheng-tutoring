@@ -71,6 +71,17 @@ def tts(text, out):
     return len(pcm) / sr
 
 
+def paper(seed):
+    rnd = np.random.default_rng(seed)
+    a = np.ones((H, W, 3), np.float32) * np.array((249, 247, 241), np.float32)
+    a += rnd.normal(0, 2.4, (H, W, 1))
+    img = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)); d = ImageDraw.Draw(img)
+    for y in range(TOP, H - 30, GAP):
+        d.line([(0, y), (W, y)], fill=mc.RULE, width=2)
+    d.line([(128, 0), (128, H)], fill=(228, 156, 150), width=2)
+    return np.asarray(img).astype(np.float32)
+
+
 def check(q):
     cmap = TTFont(mc.FONT).getBestCmap()
     texts = [q['hook'], q['series'], q['exam'], q['q_no'], q['rule']] + q['question'] + q['options'] \
