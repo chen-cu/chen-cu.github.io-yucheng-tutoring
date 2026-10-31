@@ -3,6 +3,7 @@
 用法:
   python3 make_exam_video.py exam.json 輸出資料夾
 exam.json:單題物件或陣列,格式見 Google 文件「宇誠 真題 Reels 規則（Gemini 用）」第五節。
+有 narration(4 段:開場、錯誤、正解、判斷法)時自動配旁白,畫面等旁白念完才往下。
 畫面順序:hook → 題目(整行掃出) → 選項(停頓) → 錯誤算法 + 紅 ✗ → 正解 → 圈正確選項 → 判斷法紅底線 → 署名
 """
 import sys, os, json, random
@@ -18,6 +19,33 @@ X0 = mc.X0
 
 
 def rule_y(n): return TOP + GAP * n
+
+
+# ---- 旁白(Piper 本機語音 zh_CN-chaowen-medium,溫和男聲) ----
+VOICE_DIR = os.path.expanduser('~/.cache/yucheng-voice')
+VOICE = os.path.join(VOICE_DIR, 'zh_CN-chaowen-medium.onnx')
+LETTER = {'x': '艾克斯', 'y': '歪', 'a': '欸', 'b': '逼', 'A': '欸', 'B': '逼', 'C': '西', 'D': '低'}
+_voice = None
+
+
+def tts(text, out):
+    """產生旁白 wav,回傳秒數。單獨的英文字母換成中文念法(模型不會念字母)。"""
+    global _voice
+    import re, wave
+    if _voice is None:
+        if not os.path.exists(VOICE):
+            os.makedirs(VOICE_DIR, exist_ok=True)
+            base = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/chaowen/medium/'
+            for ext in ('', '.json'):
+                subprocess.run(['curl', '-sSL', '-o', VOICE + ext, base + 'zh_CN-chaowen-medium.onnx' + ext], check=True)
+        from piper import PiperVoice
+        _voice = PiperVoice.load(VOICE)
+    spoken = re.sub(r'(?<![A-Za-z])[A-Da-dxy](?![A-Za-z])', lambda m: LETTER.get(m.group(), m.group()), text)
+    from piper import SynthesisConfig
+    with wave.open(out, 'wb') as w:
+        _voice.synthesize_wav(spoken, w, syn_config=SynthesisConfig(length_scale=0.88))
+    with wave.open(out) as w:
+        return w.getnframes() / w.getframerate()
 
 
 def paper(seed):
@@ -43,7 +71,14 @@ def check(q):
         assert X0 + d.textlength(s, font=mc.hf(50)) < 1050, f'太長:{s}'
 
 
-def build(q):
+def build(q, tmp=None):
+    nar = q.get('narration') if tmp else None
+    cues = []
+
+    def say(k, t):
+        if not nar: return t
+        wav = os.path.join(tmp, f'n{k}.wav'); d = tts(nar[k], wav); cues.append((t, wav)); return t + d
+
     seed = q.get('no', 1) * 7; rnd = random.Random(seed)
     ink = mv.Ink(); dm = ImageDraw.Draw(Image.new('RGB', (10, 10)))
     pos = lambda s, f: [X0 + dm.textlength(s[:k], font=f) for k in range(len(s))]
@@ -63,6 +98,7 @@ def build(q):
         return t + dur
 
     t = 0.3
+    e0 = say(0, t)
     t = write(q['hook'], 1, 66, mc.RED, t, 0.04, 0.05) + 0.25
     t = wipe(f"{q['series']} No.{q['no']:03d}  {q['exam']} {q['q_no']}", 2, 34, mc.GREY, t) + 0.3
     row = 3
@@ -88,8 +124,9 @@ def build(q):
         opt_xy[s[1]] = (x, rule_y(r), x + dm.textlength(s, font=f50))
         t = wipe(s, r, 50, mc.INK, t, x, 0.25) + 0.05
     row += (len(q['options']) + 1) // 2
-    t += 1.5                                   # 讓觀眾想一下
+    t = max(t + 1.5, e0 + 0.6)                 # 讓觀眾想一下
     # 錯誤算法
+    e1 = say(1, t)
     t = write('錯誤算法', row, 40, mc.RED, t, 0.02, 0.02) + 0.15; row += 1
     wr0 = row; wmax = 0
     for s in q['wrong']['steps']:
@@ -105,7 +142,9 @@ def build(q):
     if wo in opt_xy:
         x0, y, x1 = opt_xy[wo]
         t = cross(x1 + 40, y - 30, 22, t, seed + 3) + 0.5
+    t = max(t, e1 + 0.3)
     # 正解
+    e2 = say(2, t)
     t = write('正解', row, 40, mc.RED, t, 0.02, 0.02) + 0.15; row += 1
     for s in q['steps']:
         t = write(s, row, 48, mc.INK, t, 0.016, 0.01) + 0.08; row += 1
@@ -113,11 +152,14 @@ def build(q):
     if a in opt_xy:
         x0, y, x1 = opt_xy[a]
         t = mv.draw_path(ink, mv.ellipse_pts((x0 - 16, y - 72 - mv.OFF, x1 + 14, y + 6 - mv.OFF), seed + 5), mc.RED, 5, t + 0.1, 0.6) + 0.4
+    t = max(t, e2 + 0.3)
     # 判斷法 + 紅底線
+    e3 = say(3, t)
     t = write(q['rule'], row, 50, mc.INK, t, 0.02, 0.02) + 0.15
     y = rule_y(row) - mv.OFF; x1 = X0 + dm.textlength(q['rule'], font=f50)
     t = mv.draw_path(ink, mv.wobble_pts((X0 - 4, y + 2), (x1 + 6, y - 1), 2.2, seed + 7), mc.RED, 5, t, 0.4) + 0.3
-    return ink, t
+    t = max(t, e3 + 0.3)
+    return ink, t, cues
 
 
 def signature():
@@ -134,14 +176,17 @@ def signature():
 
 def render(q, out, hold=3.0, still=None):
     check(q)
-    bg = paper(q.get('no', 1)); ink, t_end = build(q)
+    import tempfile
+    tmp = None if still else tempfile.mkdtemp()
+    bg = paper(q.get('no', 1)); ink, t_end, cues = build(q, tmp)
+    silent = out.rsplit('.', 1)[0] + '-silent.mp4' if cues else out
     sig_rgb, sig_a = signature()
     total = t_end + 0.6 + hold
     frames = [int(total * FPS) - 1] if still else range(int(total * FPS))
     p = None if still else subprocess.Popen(
         ['ffmpeg', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS),
          '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'veryfast',
-         '-movflags', '+faststart', out], stdin=subprocess.PIPE)
+         '-movflags', '+faststart', silent], stdin=subprocess.PIPE)
     for fi in frames:
         now = fi / FPS; frame = bg.copy()
         for y0, x0, rgb, a, tp in ink.items:
@@ -155,6 +200,14 @@ def render(q, out, hold=3.0, still=None):
         if still: Image.fromarray(img).save(still)
         else: p.stdin.write(img.tobytes())
     if p: p.stdin.close(); p.wait()
+    if cues:   # 旁白依時間點混進影片(鋼琴請在 IG/剪映另外加,音量建議壓低)
+        cmd = ['ffmpeg', '-loglevel', 'error', '-y', '-i', silent]
+        for _, w in cues: cmd += ['-i', w]
+        fl = ''.join(f'[{i+1}]adelay={int(st*1000)}|{int(st*1000)}[a{i}];' for i, (st, _) in enumerate(cues))
+        fl += ''.join(f'[a{i}]' for i in range(len(cues))) + f'amix=inputs={len(cues)}:normalize=0,apad[out]'
+        cmd += ['-filter_complex', fl, '-map', '0:v', '-map', '[out]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
+                '-shortest', out]
+        subprocess.run(cmd, check=True); os.remove(silent)
     return total
 
 
