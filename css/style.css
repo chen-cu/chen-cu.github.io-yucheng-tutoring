@@ -20,7 +20,7 @@
   --line: #d9d3c6;       /* 細線 */
   --text: #333a41;       /* 內文 */
   --muted: #6e6a60;      /* 次要文字 */
-  --accent: #9a7b3a;     /* 深金(主要點綴色) */
+  --accent: #7f6428;     /* 深金(主要點綴色);2026-11-01 由 #9a7b3a 加深,米白底對比 5.3:1 */
   --pen: #b5352f;        /* 紅筆色:只用在手寫註記 */
 
   --serif: "Noto Serif TC", "PMingLiU", serif;
@@ -874,6 +874,7 @@ body {
   margin-top: 40px;
   border: 1px solid var(--line);
   background: #fff;
+  padding: 12px;
 }
 
 .form-embed iframe {
