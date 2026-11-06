@@ -46,3 +46,35 @@
     });
   });
 })();
+
+/* --------------------------------------------------------------------------
+   捲動進場動畫(僅首頁 body[data-reveal];減少動態效果或不支援時完全不啟用)
+   -------------------------------------------------------------------------- */
+(function scrollReveal() {
+  if (!document.body.hasAttribute("data-reveal")) return;
+  if (!("IntersectionObserver" in window)) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  var groups = [
+    ".section-title", ".section-lead", ".freebie", ".pain-item", ".hand-note",
+    ".method-item", ".teacher-mini", ".step-item", ".faq-item", ".more-link"
+  ];
+  var targets = [];
+  groups.forEach(function (sel) {
+    var list = document.querySelectorAll("section:not(.hero) " + sel);
+    Array.prototype.forEach.call(list, function (el, i) {
+      var sibIndex = Array.prototype.indexOf.call(el.parentNode.children, el);
+      el.style.setProperty("--reveal-delay", Math.min(sibIndex, 5) * 0.08 + "s");
+      el.classList.add("reveal");
+      targets.push(el);
+    });
+  });
+
+  document.documentElement.classList.add("reveal-ready");
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+  targets.forEach(function (el) { io.observe(el); });
+})();

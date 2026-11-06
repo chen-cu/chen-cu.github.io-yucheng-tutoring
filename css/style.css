@@ -1210,3 +1210,39 @@ body {
   color: var(--ink);
 }
 .article-card-desc { display: block; margin-top: 8px; font-size: 0.9375rem; color: var(--muted); }
+
+/* ==========================================================================
+   捲動進場動畫(僅首頁,body[data-reveal])
+   - 只在 JS 啟用且使用者未開「減少動態效果」時生效;否則內容照常顯示
+   - 只用 opacity / transform,不影響版面與 CLS
+   ========================================================================== */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  body[data-reveal] .hero-eyebrow,
+  body[data-reveal] .hero-title,
+  body[data-reveal] .hero-sub,
+  body[data-reveal] .trust-badge,
+  body[data-reveal] .hero-cta {
+    animation: hero-rise 0.6s ease-out both;
+  }
+  body[data-reveal] .hero-title { animation-delay: 0.08s; }
+  body[data-reveal] .hero-sub { animation-delay: 0.16s; }
+  body[data-reveal] .trust-badge { animation-delay: 0.24s; }
+  body[data-reveal] .hero-cta { animation-delay: 0.32s; }
+
+  .reveal-ready .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition-delay: var(--reveal-delay, 0s);
+  }
+  .reveal-ready .reveal.is-in { opacity: 1; transform: none; }
+
+  .teacher-mini { transition: transform 0.2s, box-shadow 0.2s; }
+  @media (hover: hover) {
+    .teacher-mini:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(23, 37, 61, 0.1); }
+  }
+}
