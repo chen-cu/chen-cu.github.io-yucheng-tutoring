@@ -1246,3 +1246,6 @@ body {
     .teacher-mini:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(23, 37, 61, 0.1); }
   }
 }
+
+/* 師資區副標:每個短句不可從中間斷行(手機只在句與句之間換行) */
+#teachers .section-lead .nb { display: inline-block; }
