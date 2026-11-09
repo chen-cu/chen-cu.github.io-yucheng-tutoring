@@ -36,11 +36,19 @@ EDGE_VOICE = os.environ.get('YUCHENG_VOICE', 'zh-TW-YunJheNeural')   # 男聲;�
 
 def edge_say(sent, mult):
     """微軟 Edge 語音:回傳 (float32 樣本, 取樣率)。mult>1 念快、<1 念慢"""
-    import asyncio, tempfile, edge_tts
+    import asyncio, tempfile, edge_tts, time
     mp3 = tempfile.mktemp(suffix='.mp3'); wav = mp3[:-4] + '.wav'
-    rate = f'{round((mult - 1) * 100):+d}%'
-    async def go(): await edge_tts.Communicate(sent, EDGE_VOICE, rate=rate).save(mp3)
-    asyncio.run(go())
+    # 2026-11-09 Antigravity 實測:語速對齊 10% 級距、句尾補標點,否則會 NoAudioReceived;偶發失敗自動重試
+    rate = f'{round((mult - 1) * 10) * 10:+d}%'
+    req_sent = sent if sent[-1:] in '。？！?!，,' else sent + '。'
+    async def go(): await edge_tts.Communicate(req_sent, EDGE_VOICE, rate=rate).save(mp3)
+    for attempt in range(5):
+        try:
+            asyncio.run(go())
+            break
+        except Exception:
+            if attempt == 4: raise
+            time.sleep(1.5)
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', mp3, '-ac', '1', '-ar', '24000', wav], check=True)
     import wave
     with wave.open(wav) as w:
