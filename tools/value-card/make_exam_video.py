@@ -123,7 +123,7 @@ def check(q):
 def build(q, tmp=None):
     nar = q.get('narration') if tmp else None
     cues = []; cam = []
-    SPEEDS = q.get('speeds', [1.06, 1.0, 0.96, 0.9])   # 開場稍快、正解放慢、判斷法最慢
+    SPEEDS = q.get('speeds', [0.95] * 4)   # 2026-11-09 使用者反映忽快忽慢:四段統一語速,只靠停頓做節奏
 
     def say(k, t):
         if not nar: return t
