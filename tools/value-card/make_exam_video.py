@@ -242,6 +242,54 @@ def signature():
     return arr[..., :3], arr[..., 3] / 255
 
 
+def cta_card(q, tmp, t):
+    """結尾 CTA 頁:換一張新筆記紙,手寫「留言考卷」並圈起,下方放品牌標語。回傳 (ink, 結束時間, 旁白 cues)"""
+    ink = mv.Ink(); rnd = random.Random(q.get('no', 1) * 11); dm = ImageDraw.Draw(Image.new('RGB', (10, 10)))
+    cues = []
+    nar = q.get('cta_narration', '想知道自己的考卷錯在哪？留言考卷，我們免費幫你分析。')
+    if tmp and q.get('narration'):
+        wav = os.path.join(tmp, 'cta.wav'); d = tts(nar, wav, q.get('speeds', [0.95])[0]); cues.append((t, wav)); t_say = t + d
+    else:
+        t_say = t
+
+    def write(s, row, size, color, t, pc=0.03, g=0.03, x=X0):
+        f = mc.hf(size); xs = [x + dm.textlength(s[:k], font=f) for k in range(len(s))]
+        return mv.write_text(ink, s, xs, rule_y(row) - 12, f, color, t, rnd, pc, g, (0.004, 0.015))
+
+    lines = q.get('cta_lines', ['考完的考卷，', '也想一題一題看懂錯在哪？'])
+    t = write(lines[0], 5, 62, mc.INK, t) + 0.1
+    t = write(lines[1], 6, 62, mc.INK, t) + 0.25
+    big = q.get('cta_big', '留言「考卷」'); f96 = mc.hf(100)
+    t = write(big, 9, 100, mc.RED, t, 0.04, 0.04) + 0.1
+    x1 = X0 + dm.textlength(big, font=f96); y = rule_y(9)
+    t = mv.draw_path(ink, mv.ellipse_pts((X0 - 26, y - 118 - mv.OFF, x1 + 24, y + 20 - mv.OFF), 77), mc.RED, 6, t, 0.6) + 0.15
+    t = write(q.get('cta_sub', '我們免費幫你分析錯在哪'), 11, 58, mc.INK, t) + 0.2
+    t = write(q.get('cta_follow', '追蹤，看下一題錯在哪'), 13, 44, mc.GREY, t, 0.02, 0.02) + 0.2
+    # 品牌標語(置中,避開 IG 下方字幕區)
+    lay = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    logo = Image.open(os.path.join(mc.HERE, 'logo.png')).convert('RGBA').resize((150, 150), Image.LANCZOS)
+    m = Image.new('L', (150, 150), 0); ImageDraw.Draw(m).ellipse([0, 0, 149, 149], fill=255); logo.putalpha(m)
+    d = ImageDraw.Draw(lay); cx = W // 2; ly = rule_y(15) - 40
+    lay.alpha_composite(logo, (cx - 75, ly))
+    f50 = mc.hf(50); l, r = '宇誠文理', '孩子的專屬家教團隊'; gap = 44     # 分隔線用畫的,手寫字型的「｜」像數字 1
+    wl, wr = dm.textlength(l, font=f50), dm.textlength(r, font=f50); x = cx - (wl + gap + wr) / 2; by = ly + 215
+    d.text((x, by), l, font=f50, fill=mc.NAVY, anchor='ls')
+    d.line([(x + wl + gap / 2, by - 44), (x + wl + gap / 2, by + 6)], fill=mc.NAVY, width=3)
+    d.text((x + wl + gap, by), r, font=f50, fill=mc.NAVY, anchor='ls')
+    tp = np.full((H, W), t, np.float32)
+    ink.add(lay, tp)
+    return ink, max(t + 0.6, t_say + 0.3), cues
+
+
+def compose(bg, ink, now):
+    frame = bg.copy()
+    for y0, x0, rgb, a, tp in ink.items:
+        vis = a * np.clip((now - tp) * 25 + 1, 0, 1)
+        h, w = a.shape; reg = frame[y0:y0 + h, x0:x0 + w]
+        reg[:] = reg * (1 - vis[..., None]) + rgb * vis[..., None]
+    return frame
+
+
 def camera(cam, now, dur=0.7):
     """回傳 (top, left, z):每個關鍵影格用 0.7 秒緩動過去;焦點放在畫面約 40% 高,避開 IG 下方字幕區"""
     ez = lambda k: k * k * (3 - 2 * k)
@@ -262,18 +310,24 @@ def render(q, out, hold=1.8, still=None):
     bg = paper(q.get('no', 1)); ink, t_end, cues, cam = build(q, tmp)
     silent = out.rsplit('.', 1)[0] + '-silent.mp4' if cues else out
     sig_rgb, sig_a = signature()
-    total = t_end + 1.3 + hold
+    t_card = t_end + 2.2                      # 全頁 + 署名停一下,再換到 CTA 頁
+    bg2 = paper(q.get('no', 1) + 50)
+    ink2, t2, cues2 = cta_card(q, tmp, t_card + 0.5)
+    cues = cues + cues2
+    total = t2 + hold
     frames = [int(total * FPS) - 1] if still else range(int(total * FPS))
     p = None if still else subprocess.Popen(
         ['ffmpeg', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS),
          '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'veryfast',
          '-movflags', '+faststart', silent], stdin=subprocess.PIPE)
     for fi in frames:
-        now = fi / FPS; frame = bg.copy()
-        for y0, x0, rgb, a, tp in ink.items:
-            vis = a * np.clip((now - tp) * 25 + 1, 0, 1)
-            h, w = a.shape; reg = frame[y0:y0 + h, x0:x0 + w]
-            reg[:] = reg * (1 - vis[..., None]) + rgb * vis[..., None]
+        now = fi / FPS
+        if now >= t_card + 0.45:
+            img = np.clip(compose(bg2, ink2, now), 0, 255).astype(np.uint8)
+            if still: Image.fromarray(img).save(still)
+            else: p.stdin.write(img.tobytes())
+            continue
+        frame = compose(bg, ink, now)
         top, left, z = camera(cam, now)
         if z > 1.001:
             im = Image.fromarray(np.clip(frame, 0, 255).astype(np.uint8))
@@ -281,6 +335,9 @@ def render(q, out, hold=1.8, still=None):
         k = np.clip((now - t_end - 0.7) / 0.6, 0, 1)
         if k > 0:
             av = sig_a * k; frame = frame * (1 - av[..., None]) + sig_rgb * av[..., None]
+        if now >= t_card:                      # 淡入 CTA 頁
+            k = (now - t_card) / 0.45
+            frame = frame * (1 - k) + compose(bg2, ink2, now) * k
         img = np.clip(frame, 0, 255).astype(np.uint8)
         if still: Image.fromarray(img).save(still)
         else: p.stdin.write(img.tobytes())
