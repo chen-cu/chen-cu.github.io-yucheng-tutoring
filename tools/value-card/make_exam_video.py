@@ -28,13 +28,34 @@ KOKORO = os.path.join(VOICE_DIR, 'kokoro-multi-lang-v1_1')
 KOKORO_URL = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_1.tar.bz2'
 SPEAKER, SEC_PER_CHAR = 58, 0.22   # 目標每字約 0.22 秒;每句只在 0.9~1.15 倍間微調          # 2026-11-01 使用者試聽 4 個男聲後選定(溫和、像國中數學老師)
 _tts = None
+# 2026-11-09 使用者反映 Kokoro 中文發音不標準,預設改用微軟台灣口音語音(需 pip install edge-tts、需連網);
+# 設 YUCHENG_TTS=kokoro 可改回本機語音
+ENGINE = os.environ.get('YUCHENG_TTS', 'edge')
+EDGE_VOICE = os.environ.get('YUCHENG_VOICE', 'zh-TW-YunJheNeural')   # 男聲;女聲可用 zh-TW-HsiaoChenNeural
 
 
-def tts(text, out):
+def edge_say(sent, mult):
+    """微軟 Edge 語音:回傳 (float32 樣本, 取樣率)。mult>1 念快、<1 念慢"""
+    import asyncio, tempfile, edge_tts
+    mp3 = tempfile.mktemp(suffix='.mp3'); wav = mp3[:-4] + '.wav'
+    rate = f'{round((mult - 1) * 100):+d}%'
+    async def go(): await edge_tts.Communicate(sent, EDGE_VOICE, rate=rate).save(mp3)
+    asyncio.run(go())
+    subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', mp3, '-ac', '1', '-ar', '24000', wav], check=True)
+    import wave
+    with wave.open(wav) as w:
+        a = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768
+    os.remove(mp3); os.remove(wav)
+    return a, 24000
+
+
+def tts(text, out, mult=1.0):
     """sherpa-onnx + Kokoro 多語模型:中文與英文字母(x、y、a、C、D)同一個男聲念。回傳秒數。"""
     global _tts
     import wave
-    if _tts is None:
+    if ENGINE == 'edge':
+        _tts = _tts or 'edge'
+    elif _tts is None:
         if not os.path.exists(KOKORO):
             os.makedirs(VOICE_DIR, exist_ok=True)
             subprocess.run(f'curl -sSL {KOKORO_URL} | tar xj -C {VOICE_DIR}', shell=True, check=True)
@@ -47,18 +68,28 @@ def tts(text, out):
         _tts = so.OfflineTts(cfg)
     import re
     sr = None; parts = []
-    for sent in re.findall(r'[^。？！?!]+[。？！?!]?', text):      # 只在句尾斷,整句念才保留語氣
-        sent = sent.strip()
+    # 只在句尾斷,整句念才保留語氣;「｜」是手動停頓點(講到答案前頓一下)
+    for sent in re.findall(r'[^。？！?!｜]+[。？！?!｜]?', text):
+        end = sent.strip()[-1:] if sent.strip() else ''
+        sent = sent.strip().rstrip('｜')
         if not sent: continue
-        g = _tts.generate(sent, sid=SPEAKER, speed=1.0); sr = g.sample_rate
+        if ENGINE == 'edge':
+            a, sr = edge_say(sent, mult)
+            nz = np.nonzero(np.abs(a) > 0.01)[0]
+            if len(nz): a = a[max(nz[0] - 200, 0): nz[-1] + 300]
+            gap = {'？': 0.6, '?': 0.6, '｜': 0.28}.get(end, 0.35)
+            parts += [a, np.zeros(int(sr * gap), np.float32)]
+            continue
+        g = _tts.generate(sent, sid=SPEAKER, speed=mult); sr = g.sample_rate
         weight = sum(1 if '\u4e00' <= c <= '\u9fff' or c.isdigit() else 1.2 for c in sent if c.isalnum())
         if weight >= 6:                                          # 短句不調速
-            sp = min(max((len(g.samples) / sr) / (weight * SEC_PER_CHAR), 0.9), 1.15)
-            if abs(sp - 1) > 0.03: g = _tts.generate(sent, sid=SPEAKER, speed=sp)
+            sp = min(max((len(g.samples) / sr * mult) / (weight * SEC_PER_CHAR), 0.9), 1.15) * mult
+            if abs(sp - mult) > 0.03: g = _tts.generate(sent, sid=SPEAKER, speed=sp)
         a = np.array(g.samples, np.float32)
         nz = np.nonzero(np.abs(a) > 0.01)[0]
         if len(nz): a = a[max(nz[0] - 200, 0): nz[-1] + 300]
-        parts += [a, np.zeros(int(sr * 0.35), np.float32)]
+        gap = {'？': 0.6, '?': 0.6, '｜': 0.28}.get(end, 0.35)
+        parts += [a, np.zeros(int(sr * gap), np.float32)]
     a = np.concatenate(parts)
     pcm = (np.clip(a, -1, 1) * 32767).astype(np.int16)
     with wave.open(out, 'wb') as w:
@@ -91,11 +122,16 @@ def check(q):
 
 def build(q, tmp=None):
     nar = q.get('narration') if tmp else None
-    cues = []
+    cues = []; cam = []
+    SPEEDS = q.get('speeds', [1.06, 1.0, 0.96, 0.9])   # 開場稍快、正解放慢、判斷法最慢
 
     def say(k, t):
         if not nar: return t
-        wav = os.path.join(tmp, f'n{k}.wav'); d = tts(nar[k], wav); cues.append((t, wav)); return t + d
+        wav = os.path.join(tmp, f'n{k}.wav'); d = tts(nar[k], wav, SPEEDS[k]); cues.append((t, wav)); return t + d
+
+    def look(t, r0, r1, z):
+        """鏡頭:在時間 t 開始移到 r0~r1 行、放大 z 倍"""
+        cam.append((t, (rule_y(r0) + rule_y(r1)) / 2 - 30, z))
 
     seed = q.get('no', 1) * 7; rnd = random.Random(seed)
     ink = mv.Ink(); dm = ImageDraw.Draw(Image.new('RGB', (10, 10)))
@@ -116,10 +152,12 @@ def build(q, tmp=None):
         return t + dur
 
     t = 0.3
+    look(0, 1, 2, 1.45)
     e0 = say(0, t)
     t = write(q['hook'], 1, 66, mc.RED, t, 0.04, 0.05) + 0.25
     t = wipe(f"{q['series']} No.{q['no']:03d}  {q['exam']} {q['q_no']}", 2, 34, mc.GREY, t) + 0.3
     row = 3
+    look(t, 3, 3 + len(q['question']), 1.15)
     brace = []
     for s in q['question']:
         if s.startswith('{'):
@@ -142,9 +180,17 @@ def build(q, tmp=None):
         opt_xy[s[1]] = (x, rule_y(r), x + dm.textlength(s, font=f50))
         t = wipe(s, r, 50, mc.INK, t, x, 0.25) + 0.05
     row += (len(q['options']) + 1) // 2
-    t = max(t + 1.5, e0 + 0.6)                 # 讓觀眾想一下
-    # 錯誤算法
+    t = max(t + 1.8, e0 + 0.6)                 # 讓觀眾想一下
+    # 錯誤算法:先在題目上畫出關鍵字,再寫錯誤算法
     e1 = say(1, t)
+    mk = q.get('mark')
+    if mk:
+        li, a0, a1 = mk; s = q['question'][li]; f = mc.hf(50)
+        look(t, 3 + li, 3 + li, 1.3)
+        x0 = X0 + dm.textlength(s[:a0], font=f); x1 = X0 + dm.textlength(s[:a1], font=f)
+        y = rule_y(3 + li) - mv.OFF
+        t = mv.draw_path(ink, mv.wobble_pts((x0 - 4, y + 4), (x1 + 4, y + 1), 2.2, seed + 9), mc.RED, 5, t + 0.5, 0.45) + 0.5
+    look(t, row, row + len(q['wrong']['steps']), 1.3)
     t = write('錯誤算法', row, 40, mc.RED, t, 0.02, 0.02) + 0.15; row += 1
     wr0 = row; wmax = 0
     for s in q['wrong']['steps']:
@@ -163,21 +209,25 @@ def build(q, tmp=None):
     t = max(t, e1 + 0.3)
     # 正解
     e2 = say(2, t)
+    look(t, row, row + len(q['steps']), 1.3)
     t = write('正解', row, 40, mc.RED, t, 0.02, 0.02) + 0.15; row += 1
     for s in q['steps']:
         t = write(s, row, 48, mc.INK, t, 0.016, 0.01) + 0.08; row += 1
     a = q['answer']
     if a in opt_xy:
         x0, y, x1 = opt_xy[a]
+        r_opt = (y - TOP) / GAP; look(t, r_opt, r_opt, 1.3); t += 0.5
         t = mv.draw_path(ink, mv.ellipse_pts((x0 - 16, y - 72 - mv.OFF, x1 + 14, y + 6 - mv.OFF), seed + 5), mc.RED, 5, t + 0.1, 0.6) + 0.4
     t = max(t, e2 + 0.3)
     # 判斷法 + 紅底線
     e3 = say(3, t)
+    look(t, row - 1, row + 1, 1.12)
     t = write(q['rule'], row, 50, mc.INK, t, 0.02, 0.02) + 0.15
     y = rule_y(row) - mv.OFF; x1 = X0 + dm.textlength(q['rule'], font=f50)
     t = mv.draw_path(ink, mv.wobble_pts((X0 - 4, y + 2), (x1 + 6, y - 1), 2.2, seed + 7), mc.RED, 5, t, 0.4) + 0.3
     t = max(t, e3 + 0.3)
-    return ink, t, cues
+    look(t, 0, 0, 1.0)                         # 結尾拉遠看全頁 + 署名
+    return ink, t, cues, cam
 
 
 def signature():
@@ -192,14 +242,27 @@ def signature():
     return arr[..., :3], arr[..., 3] / 255
 
 
-def render(q, out, hold=3.0, still=None):
+def camera(cam, now, dur=0.7):
+    """回傳 (top, left, z):每個關鍵影格用 0.7 秒緩動過去;焦點放在畫面約 40% 高,避開 IG 下方字幕區"""
+    ez = lambda k: k * k * (3 - 2 * k)
+    _, y, z = cam[0]; cur_y, cur_z = y, z
+    for t, y, z in cam[1:]:
+        if now < t: break
+        k = ez(min((now - t) / dur, 1.0))
+        cur_y, cur_z = cur_y + (y - cur_y) * k, cur_z + (z - cur_z) * k
+    hc = H / cur_z
+    top = min(max(cur_y - 0.4 * hc, 0), H - hc)
+    return top, min(110, W - W / cur_z), cur_z      # 左緣固定在紅邊線左側,長句不被切
+
+
+def render(q, out, hold=1.8, still=None):
     check(q)
     import tempfile
     tmp = None if still else tempfile.mkdtemp()
-    bg = paper(q.get('no', 1)); ink, t_end, cues = build(q, tmp)
+    bg = paper(q.get('no', 1)); ink, t_end, cues, cam = build(q, tmp)
     silent = out.rsplit('.', 1)[0] + '-silent.mp4' if cues else out
     sig_rgb, sig_a = signature()
-    total = t_end + 0.6 + hold
+    total = t_end + 1.3 + hold
     frames = [int(total * FPS) - 1] if still else range(int(total * FPS))
     p = None if still else subprocess.Popen(
         ['ffmpeg', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS),
@@ -211,7 +274,11 @@ def render(q, out, hold=3.0, still=None):
             vis = a * np.clip((now - tp) * 25 + 1, 0, 1)
             h, w = a.shape; reg = frame[y0:y0 + h, x0:x0 + w]
             reg[:] = reg * (1 - vis[..., None]) + rgb * vis[..., None]
-        k = np.clip((now - t_end) / 0.6, 0, 1)
+        top, left, z = camera(cam, now)
+        if z > 1.001:
+            im = Image.fromarray(np.clip(frame, 0, 255).astype(np.uint8))
+            frame = np.asarray(im.resize((W, H), Image.BILINEAR, box=(left, top, left + W / z, top + H / z))).astype(np.float32)
+        k = np.clip((now - t_end - 0.7) / 0.6, 0, 1)
         if k > 0:
             av = sig_a * k; frame = frame * (1 - av[..., None]) + sig_rgb * av[..., None]
         img = np.clip(frame, 0, 255).astype(np.uint8)
