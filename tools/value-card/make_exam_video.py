@@ -29,7 +29,7 @@ KOKORO_URL = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models
 SPEAKER, SEC_PER_CHAR = 58, 0.22   # 目標每字約 0.22 秒;每句只在 0.9~1.15 倍間微調          # 2026-11-01 使用者試聽 4 個男聲後選定(溫和、像國中數學老師)
 _tts = None
 # 2026-11-09 使用者反映 Kokoro 中文發音不標準,預設改用微軟台灣口音語音(需 pip install edge-tts、需連網);
-# 設 YUCHENG_TTS=kokoro 可改回本機語音
+# 設 YUCHENG_TTS=kokoro 可改回本機語音;YUCHENG_TTS=gemini 改用 Gemini 語音(需 GEMINI_API_KEY,見 gemini_tts.py)
 ENGINE = os.environ.get('YUCHENG_TTS', 'edge')
 EDGE_VOICE = os.environ.get('YUCHENG_VOICE', 'zh-TW-YunJheNeural')   # 男聲;女聲可用 zh-TW-HsiaoChenNeural
 
@@ -81,6 +81,16 @@ def tts(text, out, mult=1.0):
         end = sent.strip()[-1:] if sent.strip() else ''
         sent = sent.strip().rstrip('｜')
         if not sent: continue
+        if ENGINE == 'gemini':        # Gemini 語音(需 GEMINI_API_KEY);聲音與語氣用環境變數調
+            import gemini_tts
+            pcm = gemini_tts.say(sent, os.environ.get('YUCHENG_GEMINI_VOICE', 'Charon'),
+                                 os.environ.get('YUCHENG_GEMINI_STYLE', '溫和有耐心的國中老師，咬字清楚，語速稍慢。'))
+            a = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768; sr = gemini_tts.SR
+            nz = np.nonzero(np.abs(a) > 0.01)[0]
+            if len(nz): a = a[max(nz[0] - 200, 0): nz[-1] + 300]
+            gap = {'？': 0.6, '?': 0.6, '｜': 0.28}.get(end, 0.35)
+            parts += [a, np.zeros(int(sr * gap), np.float32)]
+            continue
         if ENGINE == 'edge':
             a, sr = edge_say(sent, mult)
             nz = np.nonzero(np.abs(a) > 0.01)[0]
