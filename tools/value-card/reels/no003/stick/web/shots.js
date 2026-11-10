@@ -206,24 +206,40 @@ SHOTS.push({ start: cut(8), end: cut(9), tr: 'whip', draw(ctx, lt, t) {
   ctx.save(); ctx.translate(nx, ny); ctx.rotate(-.2 + q * 2.5); rrect(ctx, -55, -36, 110, 72, 6); fillStroke(ctx, '#fffaf0', 4); text(ctx, '1/6', 0, 2, 42, '#2f63c9', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore();
   if (q > 0) for (let i = 0; i < 3; i++) { const k = clamp(q * 1.1 - i * .08), x = lerp(380, 820, easeIn(k)) + i * 40, y = lerp(1280, 900, k) - i * 30; circle(ctx, x, y, 24); fillStroke(ctx, '#f2c230', 4); text(ctx, '$', x, y + 2, 30, '#9a6a00', INK, 0, '"Noto Sans CJK TC"', 900); }
 } });
-// J — CTA:留言「考卷」+ logo + 標語(在 IG 安全區內)
-SHOTS.push({ start: cut(9), end: Le(9) + 2.2, tr: 'cut', draw(ctx, lt, t) {
+// J — CTA:全部手寫在白板上(和開頭動畫同風格),小宇舉手繪紙牌秀 IG 帳號;不用色塊橫條,不擋角色
+SHOTS.push({ start: cut(9), end: Le(9) + 2.4, tr: 'cut', draw(ctx, lt, t) {
   const hh = handheld(t, 2); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1.0, r: 0 };
   classBG(ctx, cam, t); applyCam(ctx, cam, .8);
-  boardText(ctx, '你的考卷也有陷阱嗎？', 540, BOARD.y + 140, 68, '#1f2a44', kf(t, [[Ls(9), 0], [Ls(9) + .9, 1]], lin), 'center');
+  boardText(ctx, '你的考卷也有陷阱嗎？', 540, BOARD.y + 130, 64, '#1f2a44', kf(t, [[Ls(9), 0], [Ls(9) + .9, 1]], lin), 'center');
   const k = kf(t, [[tAt(9, '留言'), 0], [tAt(9, '留言') + .35, 1, backOut]]);
-  ctx.save(); ctx.translate(540, BOARD.y + 330); ctx.scale(k, k); boardText(ctx, '留言「考卷」', 0, 40, 140, '#d8312b', 1, 'center'); ctx.restore();
-  redCircle(ctx, 540, BOARD.y + 320, 400, 120, kf(t, [[tAt(9, '留言') + .4, 0], [tAt(9, '留言') + 1.0, 1]], lin));
-  boardText(ctx, '老師免費幫你抓陷阱', 540, BOARD.y + 560, 64, '#1f2a44', kf(t, [[tAt(9, '我們免費'), 0], [tAt(9, '我們免費') + .9, 1]], lin), 'center');
-  // logo + 帳號
-  const b = kf(t, [[Le(9) - .3, 0], [Le(9) + .1, 1]]);
-  if (b > 0) { ctx.save(); ctx.globalAlpha = b; if (window.LOGO && LOGO.complete) { ctx.save(); circle(ctx, 230, BOARD.y + 690, 52); ctx.clip(); ctx.drawImage(LOGO, 178, BOARD.y + 638, 104, 104); ctx.restore(); }
-    text(ctx, '@yuchengtutoring', 590, BOARD.y + 692, 58, '#17253d', INK, 0, 'Poppins', 700); ctx.restore(); }
+  ctx.save(); ctx.translate(540, BOARD.y + 300); ctx.scale(k, k); boardText(ctx, '留言「考卷」', 0, 40, 136, '#d8312b', 1, 'center'); ctx.restore();
+  redCircle(ctx, 540, BOARD.y + 290, 390, 115, kf(t, [[tAt(9, '留言') + .4, 0], [tAt(9, '留言') + 1.0, 1]], lin));
+  boardText(ctx, '誠誠老師免費幫你抓陷阱', 540, BOARD.y + 510, 58, '#1f2a44', kf(t, [[tAt(9, '我們免費'), 0], [tAt(9, '我們免費') + 1.0, 1]], lin), 'center');
+  // 手寫標語:宇誠(紅)文理(深藍)+ 孩子的專屬家教團隊(黑),由左往右寫出;下方手畫波浪底線
+  const ks = kf(t, [[Le(9) - .2, 0], [Le(9) + 1.0, 1]], lin);
+  if (ks > 0) {
+    const y = BOARD.y + 670, s1 = '宇誠', s2 = '文理', s3 = '孩子的專屬家教團隊';
+    const w1 = boardW(ctx, s1, 66), w2 = boardW(ctx, s2, 66), w3 = boardW(ctx, s3, 50), x0 = 540 - (w1 + w2 + w3 + 40) / 2;
+    const seg = (a, b) => clamp((ks - a) / (b - a));
+    boardText(ctx, s1, x0, y, 66, '#d8312b', seg(0, .2));
+    boardText(ctx, s2, x0 + w1, y, 66, '#1f4ba0', seg(.2, .4));
+    boardText(ctx, s3, x0 + w1 + w2 + 40, y - 4, 50, '#1f2a44', seg(.4, 1));
+  }
   applyCam(ctx, cam, 1);
-  const wave = Math.sin(lt * 8) * .35;
-  drawStick(ctx, C(XY, { x: 270, y: FLOOR_Y, s: 520, arms: { L: [.3, -.1], R: [2.6 + wave, .3] }, face: { eyes: 'happy', mouth: 'grin' } }));
-  drawStick(ctx, C(TC, { x: 820, y: FLOOR_Y, s: 620, flip: -1, arms: { L: [.3, -.1], R: [2.5 - wave, .3] }, face: { eyes: 'normal', mouth: 'smile', look: [-.3, 0] } }));
-  const c = kf(t, [[Le(9), 0], [Le(9) + .4, 1]]);
-  if (c > 0) { ctx.save(); ctx.globalAlpha = c; rrect(ctx, 120, 988, 840, 96, 26); fillStroke(ctx, '#17253d', 0); text(ctx, '宇誠文理｜孩子的專屬家教團隊', 540, 1037, 48, '#ffd23a', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore(); }
+  // 小宇舉紙牌(膠帶貼角的手繪卡),上面手寫 IG 帳號
+  const up = kf(t, [[Le(9) + .1, 0], [Le(9) + .5, 1, backOut]]);
+  const bob = Math.sin(lt * 6) * 6;
+  drawStick(ctx, C(XY, { x: 270, y: FLOOR_Y, s: 520, arms: up > .05 ? { L: { ik: [.2, -.42], bend: 1 }, R: { ik: [.2, -.42], bend: -1 } } : { L: [.3, -.1], R: [2.6 + Math.sin(lt * 8) * .35, .3] }, face: { eyes: 'happy', mouth: 'grin' } }));
+  if (up > 0) {
+    ctx.save(); ctx.translate(270, lerp(1500, 1330, up) + bob); ctx.rotate(-.05);
+    rrect(ctx, -240, -66, 480, 132, 10); fillStroke(ctx, '#fffdf6', 6);
+    ctx.save(); ctx.globalAlpha = .55; ctx.fillStyle = '#f2d27a'; ctx.translate(-220, -64); ctx.rotate(-.5); ctx.fillRect(-30, -12, 60, 24); ctx.restore();
+    ctx.save(); ctx.globalAlpha = .55; ctx.fillStyle = '#f2d27a'; ctx.translate(220, -64); ctx.rotate(.5); ctx.fillRect(-30, -12, 60, 24); ctx.restore();
+    boardText(ctx, 'IG', -185, 20, 58, '#d8312b', 1, 'center');
+    boardText(ctx, '@yuchengtutoring', 35, 20, 60, '#1f2a44', 1, 'center');
+    for (const hx of [-120, 120]) { circle(ctx, hx, 62, 16); fillStroke(ctx, '#ffffff', 6, '#17253d'); }
+    ctx.restore();
+  }
+  drawStick(ctx, C(TC, { x: 820, y: FLOOR_Y, s: 620, flip: -1, arms: { L: [.3, -.1], R: aimAt(820, FLOOR_Y, 620, -1, 600, 640) }, prop: pointerProp(.75), face: { eyes: 'normal', mouth: 'smile', look: [-.5, -.4] } }));
 } });
 window.LOGO = new Image(); LOGO.src = 'logo.png';
