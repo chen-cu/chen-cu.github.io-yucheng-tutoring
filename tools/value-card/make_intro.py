@@ -1,6 +1,6 @@
 """Reels 開頭品牌小動畫(約 1.8 秒,1080x1920,無聲)
 
-  python3 make_intro.py 小宇正面圖.png 輸出.mp4
+  python3 make_intro.py 輸出.mp4   (小宇由 stick.py 程式繪製,頭部用 xiaoyu_head.png)
 
 畫面:筆記紙 → logo 彈出 → 紅筆圈起 logo → 小宇從下方探頭 → 手寫「宇誠文理」與標語
 小宇圖:白底即可,程式會從四角去背(頭部內的白色保留)。
@@ -9,6 +9,7 @@ import sys, subprocess, math
 import numpy as np
 from PIL import Image, ImageDraw
 import make_card as mc
+import stick
 
 W, H, FPS, DUR = 1080, 1920, 30, 1.8
 ez = lambda k: k * k * (3 - 2 * k)
@@ -45,8 +46,6 @@ def main(xy_path, out, walk_path=None):
     bg = paper()
     logo = Image.open(f'{mc.HERE}/logo.png').convert('RGBA').resize((340, 340), Image.LANCZOS)
     m = Image.new('L', logo.size, 0); ImageDraw.Draw(m).ellipse([0, 0, 339, 339], fill=255); logo.putalpha(m)
-    xy = cutout(xy_path, 430)
-    wk = cutout(walk_path, 430) if walk_path else xy
     cx, cy = W // 2, 760
     # 文字圖層(由左往右掃出)
     txt = Image.new('RGBA', (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(txt)
@@ -74,15 +73,14 @@ def main(xy_path, out, walk_path=None):
                 r = 226 + wob[i] * 0.25 + (6 if a > math.pi * 1.3 else 0) * (a - math.pi * 1.3)   # 接近收尾時略往外,像手畫交疊
                 pts.append((cx + r * 1.04 * math.cos(a), cy + r * 0.98 * math.sin(a)))
             if len(pts) > 1: ImageDraw.Draw(fr).line(pts, fill=mc.RED + (255,), width=9, joint='curve')
-        # 3. 小宇從左邊跑進來 0.5~1.05s(走路姿勢上下彈跳),停下後換正面
-        k = min(max((t - 0.5) / 0.55, 0), 1)
+        # 3. 小宇從左邊跑進來 0.45~1.1s(程式繪製,手腳真的會擺動),最後 0.25 秒放慢、換成站姿
+        k = min(max((t - 0.45) / 0.65, 0), 1)
         if k > 0:
-            feet, x_end = 1680, 200   # 站在標語下方,不擋字
-            if k < 1:
-                x = int(-wk.width + (x_end + wk.width) * ez(k)); bob = int(abs(math.sin(k * math.pi * 4)) * 26)
-                fr.alpha_composite(wk, (x, feet - wk.height - bob))
-            else:
-                fr.alpha_composite(xy, (x_end, feet - xy.height))
+            feet, x_end, h = 1680, 300, 470
+            x = -150 + (x_end + 150) * (1 - (1 - k) ** 2)
+            run = stick.run_pose(t * 2 * math.pi * 2.6)
+            pose = stick.mix(run, stick.STAND, ez(min(max((k - 0.75) / 0.25, 0), 1)))
+            stick.draw_xiaoyu(fr, x, feet, h, pose)
         # 4. 文字掃出 0.8~1.3s
         k = ez(min(max((t - 0.8) / 0.5, 0), 1))
         if k > 0:
@@ -93,5 +91,4 @@ def main(xy_path, out, walk_path=None):
 
 
 if __name__ == '__main__':
-    # 用法:python3 make_intro.py 小宇正面.png 輸出.mp4 [小宇走路.png]
-    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else 'intro.mp4', sys.argv[3] if len(sys.argv) > 3 else None)
+    main(None, sys.argv[1] if len(sys.argv) > 1 else 'intro.mp4')
