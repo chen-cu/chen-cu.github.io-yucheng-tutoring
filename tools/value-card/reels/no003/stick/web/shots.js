@@ -1,6 +1,6 @@
 // ---------- 這題錯在哪 No.003:113 會考數學第 6 題(小宇 × 宇誠老師)----------
-const XY = { cols: ['#2f63c9', '#f6f1e8'], hat: 'tuft', belt: false };                                   // 小宇:藍白條紋
-const TC = { cols: ['#ffffff', '#ffffff'], hat: 'teacher', belt: false, tie: true, glasses: true };     // 老師:白襯衫紅領帶
+const XY = { yc: true, hat: 'tuft', belt: false };                                                     // 小宇:設定圖款細線身體
+const TC = { yc: true, shirt: true, hat: 'teacher', belt: false, glasses: true };                     // 老師:白襯衫紅領帶
 const C = (base, extra) => Object.assign({}, base, extra);
 const walkLegs = (t, sp = 9, amp = .5) => ({ L: [Math.sin(t * sp) * amp + .05, -Math.max(0, Math.sin(t * sp + 1)) * .7], R: [-Math.sin(t * sp) * amp + .05, -Math.max(0, -Math.sin(t * sp + 1)) * .7] });
 const walkArms = (t, sp = 9, amp = .5) => ({ L: [.3 - Math.sin(t * sp) * amp, -.3], R: [.3 + Math.sin(t * sp) * amp, -.3] });

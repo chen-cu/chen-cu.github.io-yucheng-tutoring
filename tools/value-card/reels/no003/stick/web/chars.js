@@ -12,8 +12,8 @@ function limbPts(ox, oy, side, a1, a2, l1, l2) {
 function drawStick(ctx, o) {
   const s = o.s || 400, flip = o.flip || 1;
   const sil = o.sil; // silhouette colour or undefined
-  const lw = .017, limbW = .028;
-  const ink = sil || INK;
+  const lw = o.yc ? .011 : .017, limbW = o.yc ? .016 : .028;
+  const ink = sil || (o.yc ? '#17253d' : INK);
   const bounce = o.bob || 0;
   ctx.save();
   ctx.translate(o.x, o.y);
@@ -32,16 +32,25 @@ function drawStick(ctx, o) {
   const legP = {};
   for (const [k, side] of [['L', -1], ['R', 1]]) {
     const [a1, a2] = legs[k];
-    const p = limbPts(side * .055, hipY, side, a1, a2, .155, .155); legP[k] = p;
+    const p = limbPts(side * (o.yc ? .028 : .055), hipY, side, a1, a2, .155, .155); legP[k] = p;
     ctx.beginPath(); ctx.moveTo(...p[0]); ctx.lineTo(...p[1]); ctx.lineTo(...p[2]);
     ctx.lineWidth = limbW; ctx.strokeStyle = ink; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
-    ellipse(ctx, p[2][0] + side * .022, p[2][1] + .004, .042, .022, 0); ctx.fillStyle = ink; ctx.fill();
+    if (o.yc) line(ctx, p[2][0], p[2][1], p[2][0] + side * .05, p[2][1] + .004, limbW, ink);
+    else { ellipse(ctx, p[2][0] + side * .022, p[2][1] + .004, .042, .022, 0); ctx.fillStyle = ink; ctx.fill(); }
   }
   // torso (bean)
   const tw = .25, tTop = -.62, tBot = -.27;
   const torso = () => { ctx.beginPath(); ctx.roundRect(-tw / 2, tTop, tw, tBot - tTop, [.1, .1, .12, .12]); };
   const cols = o.cols || PAL.red;
-  if (sil) { torso(); ctx.fillStyle = sil; ctx.fill(); }
+  if (o.yc && !sil) {          // 宇誠角色設定圖:細線身體
+    line(ctx, 0, hipY + .01, 0, -.6, limbW, ink);
+    if (o.shirt) {
+      path(ctx, [[-.062, -.59], [.062, -.59], [.052, hipY + .02], [-.052, hipY + .02]]); fillStroke(ctx, '#ffffff', lw, ink);
+      path(ctx, [[-.014, -.585], [.014, -.585], [.02, -.46], [0, -.43], [-.02, -.46]]); fillStroke(ctx, '#c0322e', .008, ink);
+    } else {
+      line(ctx, -.03, hipY + .005, .03, hipY + .005, limbW, ink);   // 褲頭
+    }
+  } else if (sil) { torso(); ctx.fillStyle = sil; ctx.fill(); }
   else {
     torso(); ctx.fillStyle = cols[0]; ctx.fill();
     if (cols[1] !== cols[0]) {
@@ -60,23 +69,25 @@ function drawStick(ctx, o) {
   for (const [k, side] of [['L', -1], ['R', 1]]) {
     const al = o.armLen || 1;
     let a1, a2;
-    if (arms[k].ik) [a1, a2] = ik(side, side * .1, shY, arms[k].ik[0], arms[k].ik[1], .14 * al, .13 * al, arms[k].bend || 1);
+    const sx = o.yc ? side * .012 : side * .1, sy = o.yc ? -.565 : shY;
+    if (arms[k].ik) [a1, a2] = ik(side, sx, sy, arms[k].ik[0], arms[k].ik[1], .14 * al, .13 * al, arms[k].bend || 1);
     else [a1, a2] = arms[k];
-    const p = limbPts(side * .1, shY, side, a1, a2, .14 * al, .13 * al); handP[k] = p;
+    const p = limbPts(sx, sy, side, a1, a2, .14 * al, .13 * al); handP[k] = p;
     if (o.propBehind) o.propBehind(ctx, k, p[2], p[3], side);
     ctx.beginPath(); ctx.moveTo(...p[0]); ctx.lineTo(...p[1]); ctx.lineTo(...p[2]);
     ctx.lineWidth = limbW; ctx.strokeStyle = ink; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
     if (o.prop) o.prop(ctx, k, p[2], p[3], side);
-    circle(ctx, p[2][0], p[2][1], .03); ctx.fillStyle = ink; ctx.fill();
+    if (o.yc && !sil) { circle(ctx, p[2][0], p[2][1], .03); fillStroke(ctx, '#ffffff', lw, ink); }
+    else { circle(ctx, p[2][0], p[2][1], .03); ctx.fillStyle = ink; ctx.fill(); }
   }
   // head
-  const hr = .19, hx = 0, hy = -.765;
+  const hr = o.yc ? .155 : .19, hx = 0, hy = o.yc ? -.75 : -.765;
   ctx.save(); ctx.translate(hx, hy); ctx.rotate(o.headTilt || 0); ctx.translate(-hx, -hy);
   if (sil) { circle(ctx, hx, hy, hr); ctx.fillStyle = sil; ctx.fill(); }
   else {
-    circle(ctx, hx, hy, hr); ctx.fillStyle = HEAD; ctx.fill();
+    circle(ctx, hx, hy, hr); ctx.fillStyle = o.yc ? '#ffffff' : HEAD; ctx.fill();
     ctx.save(); circle(ctx, hx, hy, hr); ctx.clip(); circle(ctx, hx - .05, hy - .045, hr * 1.02); ctx.fillStyle = 'rgba(0,0,0,0)';
-    ctx.beginPath(); ctx.arc(hx, hy, hr + .01, 0, TAU); ctx.arc(hx - .045, hy - .04, hr * 1.0, 0, TAU, true); ctx.fillStyle = HEAD_SH; ctx.fill(); ctx.restore();
+    ctx.beginPath(); ctx.arc(hx, hy, hr + .01, 0, TAU); ctx.arc(hx + (o.yc ? .03 : -.045), hy - .04, hr * 1.0, 0, TAU, true); ctx.fillStyle = o.yc ? '#dbe3ee' : HEAD_SH; ctx.fill(); ctx.restore();
     if (o.blush) { ellipse(ctx, hx - .1, hy + .06, .035, .02); ellipse(ctx, hx + .1, hy + .06, .035, .02); ctx.fillStyle = 'rgba(240,120,120,.35)'; ctx.fill(); }
   }
   // hat
@@ -88,7 +99,7 @@ function drawStick(ctx, o) {
     else if (hat === 'tuft') drawTuft(ctx, hx, hy, hr, lw);
     else if (hat === 'teacher') drawTeacherHair(ctx, hx, hy, hr, lw);
   }
-  if (!sil) { circle(ctx, hx, hy, hr); fillStroke(ctx, null, lw); }
+  if (!sil) { circle(ctx, hx, hy, hr); fillStroke(ctx, null, lw, o.yc ? '#17253d' : INK); }
   // face
   drawFace(ctx, hx, hy, hr, o.face || {}, o, sil);
   if (o.glasses && !sil) drawGlasses(ctx, hx, hy, hr, o.face || {});
@@ -151,6 +162,10 @@ function drawFace(ctx, hx, hy, hr, f, o, sil) {
       ctx.lineWidth = .011; ctx.stroke(); continue;
     }
     if (k === 'x') { const xc = glow ? '#fff' : INK; line(ctx, x - .03, y - .03, x + .03, y + .03, .018, xc); line(ctx, x + .03, y - .03, x - .03, y + .03, .018, xc); continue; }
+    if (o.yc && (k === 'normal' || k === 'wide')) {
+      const rr = k === 'wide' ? .022 : .015;
+      ellipse(ctx, x + look[0] * .012, y + look[1] * .01, rr, rr * 1.3 * (1 - blink * .9)); ctx.fillStyle = INK; ctx.fill(); continue;
+    }
     let r = k === 'wide' ? er * 1.3 : er;
     const pr = k === 'wide' ? r * .3 : (f.pupil || .45) * r;
     ctx.save();
@@ -170,13 +185,14 @@ function drawFace(ctx, hx, hy, hr, f, o, sil) {
     for (const side of [-1, 1]) {
       const x = hx + side * ex + turn * .06; const up = (f.browOne && side === f.browOne) ? .03 : 0;
       ctx.save(); ctx.translate(x, by - up); ctx.rotate(side * ba);
-      ctx.beginPath(); ctx.moveTo(-.03, .006); ctx.quadraticCurveTo(0, -.01, .03, .006); ctx.lineWidth = .014; ctx.strokeStyle = INK; ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
+      const bw = o.yc ? .022 : .03; ctx.beginPath(); ctx.moveTo(-bw, .006); ctx.quadraticCurveTo(0, -.01, bw, .006); ctx.lineWidth = o.yc ? .009 : .014; ctx.strokeStyle = INK; ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
     }
   }
   // mouth
   const mx = hx + turn * .06, my = hy + .085; const m = f.mouth || 'smile';
   ctx.lineWidth = .014; ctx.strokeStyle = INK; ctx.lineCap = 'round';
-  if (m === 'smile') { ctx.beginPath(); ctx.arc(mx, my - .04, .045, .5, Math.PI - .5); ctx.stroke(); }
+  if (o.yc) ctx.lineWidth = .009;
+  if (m === 'smile') { const mr = o.yc ? .032 : .045; ctx.beginPath(); ctx.arc(mx, my - mr * .9, mr, .6, Math.PI - .6); ctx.stroke(); }
   else if (m === 'flat') { line(ctx, mx - .03, my, mx + .03, my, .014); }
   else if (m === 'frown') { ctx.beginPath(); ctx.arc(mx, my + .04, .04, Math.PI + .6, -.6); ctx.stroke(); }
   else if (m === 'smirk') { ctx.beginPath(); ctx.moveTo(mx - .035, my + .005); ctx.quadraticCurveTo(mx + .01, my + .02, mx + .045, my - .02); ctx.stroke(); }
@@ -237,20 +253,30 @@ function drawChest(ctx, x, y, s, open = 1) {
 
 // ---------- 宇誠角色:小宇的頭髮、老師的髮型與眼鏡(依 2026-11-09 角色設定圖)----------
 function drawTuft(ctx, hx, hy, hr, lw) {
+  // 小宇:頭頂偏右一撮往右上翹的頭髮
   const t = hy - hr;
-  path(ctx, [[hx - .06, t + .03], [hx - .03, t - .07], [hx + .005, t - .01], [hx + .05, t - .12], [hx + .06, t - .03], [hx + .13, t - .07], [hx + .1, t + .02], [hx + .12, t + .06]]);
-  fillStroke(ctx, HEAD, lw);
+  ctx.beginPath(); ctx.moveTo(hx - .01, t + .03);
+  ctx.quadraticCurveTo(hx + .005, t - .03, hx + .03, t - .06);
+  ctx.quadraticCurveTo(hx + .04, t - .03, hx + .045, t - .015);
+  ctx.quadraticCurveTo(hx + .065, t - .07, hx + .1, t - .085);
+  ctx.quadraticCurveTo(hx + .09, t - .04, hx + .08, t - .01);
+  ctx.quadraticCurveTo(hx + .105, t - .03, hx + .125, t - .03);
+  ctx.quadraticCurveTo(hx + .11, t + .01, hx + .09, t + .045);
+  ctx.fillStyle = '#ffffff'; ctx.fill();
+  ctx.lineWidth = lw; ctx.strokeStyle = '#17253d'; ctx.lineJoin = 'round'; ctx.stroke();
 }
 function drawTeacherHair(ctx, hx, hy, hr, lw) {
-  // 頭頂一片頭髮,左側分線往下(白色填色、深色外框,和設定圖一樣是線條感)
+  // 老師:側分短髮,額前一道往右下的瀏海線(白色,線條感)
   ctx.save(); circle(ctx, hx, hy, hr); ctx.clip();
-  ctx.beginPath(); ctx.moveTo(hx - hr * 1.1, hy - hr * .05); ctx.quadraticCurveTo(hx - hr * .9, hy - hr * 1.2, hx + hr * .2, hy - hr * 1.08);
-  ctx.quadraticCurveTo(hx + hr * 1.05, hy - hr * .95, hx + hr * 1.05, hy - hr * .2); ctx.quadraticCurveTo(hx + hr * .5, hy - hr * .55, hx - hr * .35, hy - hr * .45);
-  ctx.quadraticCurveTo(hx - hr * .7, hy - hr * .35, hx - hr * .78, hy + hr * .05); ctx.closePath();
-  fillStroke(ctx, '#eef0f4', lw); ctx.restore();
+  ctx.beginPath(); ctx.moveTo(hx - hr * 1.05, hy - hr * .05);
+  ctx.quadraticCurveTo(hx - hr * .95, hy - hr * 1.1, hx, hy - hr * 1.02);
+  ctx.quadraticCurveTo(hx + hr * .95, hy - hr * 1.0, hx + hr * 1.05, hy - hr * .15);
+  ctx.quadraticCurveTo(hx + hr * .55, hy - hr * .62, hx - hr * .3, hy - hr * .5);
+  ctx.quadraticCurveTo(hx - hr * .62, hy - hr * .42, hx - hr * .72, hy + hr * .02); ctx.closePath();
+  fillStroke(ctx, '#ffffff', lw, '#17253d'); ctx.restore();
 }
 function drawGlasses(ctx, hx, hy, hr, f) {
-  const turn = f.turn || 0, ex = .072, ey = hy - .005, r = .056;
+  const turn = f.turn || 0, ex = .068, ey = hy - .005, r = .044;
   ctx.lineWidth = .013; ctx.strokeStyle = INK;
   for (const side of [-1, 1]) { circle(ctx, hx + side * ex + turn * .06, ey, r); ctx.stroke(); }
   line(ctx, hx - ex + r + turn * .06, ey, hx + ex - r + turn * .06, ey, .012);
