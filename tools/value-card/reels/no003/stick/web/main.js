@@ -13,21 +13,19 @@ const TOTAL_FRAMES = Math.round(DUR * FPS);
 const grains = [];
 for (let k = 0; k < 4; k++) { const g = document.createElement('canvas'); g.width = g.height = 256; const gc = g.getContext('2d'); const id = gc.createImageData(256, 256); const R = rng(k + 11); for (let i = 0; i < id.data.length; i += 4) { const v = 128 + (R() - .5) * 120; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; } gc.putImageData(id, 0, 0); grains.push(g); }
 
-// captions: 1-3 word chunks
+// captions: plain single-line subtitles (小宇 white, 老師 pale yellow); key numbers pop inside shots
 const CHUNKS = (() => {
-  const ch = WORDS.map(w => ({ text: w.w, s: w.s, e: w.e }));
+  const ch = WORDS.map(w => ({ text: w.w, s: w.s, e: w.e, who: LINES[w.line].who }));
   ch.forEach((c, i) => { const n = ch[i + 1]; c.e = n && n.s - c.e < .5 ? n.s : c.e + .25; });
-  return ch;
+  return ch.filter(c => c.text.replace(/[，。！？、：；「」…\s]/g, '').length);
 })();
-// caption style: all lowercase, no punctuation (hyphens become spaces; letters, digits and % stay)
-const capText = s => s.replace(/[，。！？、：；「」]/g, ' ').replace(/\s+/g, ' ').trim();
+const capText = s => s.replace(/[，。！？、：；「」]/g, ' ').replace(/……/g, '…').replace(/\s+/g, ' ').trim();
 function drawCaption(ctx, t) {
   const c = CHUNKS.find(c => t >= c.s && t < c.e); if (!c) return;
-  const k = clamp((t - c.s) / .1); const sc = .82 + .18 * backOut(k);
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.translate(540, 1345); ctx.scale(sc, sc);
-  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 5;
-  text(ctx, capText(c.text), 0, 0, 74, '#ffd23a', '#111', 14, '"Noto Sans CJK TC"', 900);
-  ctx.shadowColor = 'transparent'; text(ctx, capText(c.text), 0, 0, 74, '#ffd23a', '#111', 0, '"Noto Sans CJK TC"', 900);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const col = c.who === '老師' ? '#ffe7a3' : '#ffffff';
+  text(ctx, capText(c.text), 540, 1330, 62, col, '#141414', 12, '"Noto Sans CJK TC"', 900);
+  text(ctx, capText(c.text), 540, 1330, 62, col, '#141414', 0, '"Noto Sans CJK TC"', 900);
   ctx.restore();
 }
 function renderShot(ctx, i, t) {

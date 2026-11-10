@@ -4,7 +4,7 @@
 """
 import sys, os, json, re, wave, subprocess
 cfg = json.load(open(sys.argv[1], encoding='utf-8')); adir = sys.argv[2] if len(sys.argv) > 2 else None
-GAP, LEAD = 0.35, 0.15
+GAP, LEAD = 0.28, 0.6
 words, lines, t, parts = [], [], LEAD, []
 for i, ln in enumerate(cfg['lines']):
     txt = ln['text']; n = len(re.sub(r'[，。！？、：；「」\s]', '', txt))
@@ -17,9 +17,9 @@ for i, ln in enumerate(cfg['lines']):
     lines.append({'s': round(t, 3), 'e': round(t + dur, 3), 'who': ln['who'], 'text': txt})
     # 字幕:在標點處切,每段最多 8 個字
     chunks = []
-    for seg in re.split(r'(?<=[，。！？：；])', txt):
+    for seg in re.split(r'(?<=[，。！？：；、])|(?<=……)', txt):
         seg = seg.strip()
-        while len(seg) > 9: chunks.append(seg[:8]); seg = seg[8:]
+        while len(seg) > 11: chunks.append(seg[:10]); seg = seg[10:]
         if seg: chunks.append(seg)
     tot = sum(len(c) for c in chunks); u = t
     for c in chunks:

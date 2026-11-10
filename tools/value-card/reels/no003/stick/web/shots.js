@@ -1,142 +1,217 @@
-// ---------- 這題錯在哪 No.003:113 會考數學第 6 題(小宇 × 宇誠老師)----------
-const XY = { yc: true, hat: 'tuft', belt: false };                                                     // 小宇:設定圖款細線身體
-const TC = { yc: true, shirt: true, hat: 'teacher', belt: false, glasses: true };                     // 老師:白襯衫紅領帶
+// ---------- 這題錯在哪 No.003 v2(搞笑對話版):113 會考數學 抽球題(小宇 × 宇誠老師)----------
+const XY = { yc: true, hat: 'tuft', belt: false };
+const TC = { yc: true, shirt: true, hat: 'teacher', belt: false, glasses: true };
 const C = (base, extra) => Object.assign({}, base, extra);
 const walkLegs = (t, sp = 9, amp = .5) => ({ L: [Math.sin(t * sp) * amp + .05, -Math.max(0, Math.sin(t * sp + 1)) * .7], R: [-Math.sin(t * sp) * amp + .05, -Math.max(0, -Math.sin(t * sp + 1)) * .7] });
 const walkArms = (t, sp = 9, amp = .5) => ({ L: [.3 - Math.sin(t * sp) * amp, -.3], R: [.3 + Math.sin(t * sp) * amp, -.3] });
 const handheld = (t, a = 4) => shake(t * .35, a, 1, 2);
 const Ls = i => LINES[i].s, Le = i => LINES[i].e;
-// 角色手臂指向畫面上某點(ik 目標換成角色座標)
-const aimAt = (cx, cy, s, flip, X, Y) => ({ ik: [(X - cx) / s * flip, (Y - cy) / s], bend: -1 });
-
-// 白板內容(各鏡共用):題目五行 + 依時間出現的算式
-const QL = ['箱內有 50 顆白球和 10 顆紅球，', '抽球 31 次，每次抽一球。', '白球放回，紅球不放回。', '前 30 次抽出紅球 4 次，', '第 31 次抽出紅球的機率為何？'];
-const QX = BOARD.x + 40, QY = BOARD.y + 100, QH = 92, QS = 56;
-function boardContent(ctx, t) {
-  boardText(ctx, '這題錯在哪？', QX, QY - 10, 64, '#d8312b', 1);
-  QL.forEach((s, i) => boardText(ctx, s, QX, QY + 80 + i * QH, QS, '#1f2a44', kf(t, [[.3 + i * .35, 0], [.7 + i * .35, 1]], x => x)));
-  // 小宇的錯誤算法
-  const wy = QY + 80 + 5 * QH + 40;
-  const w1 = '10 ÷ 60 = 1/6  選 (B)';
-  boardText(ctx, w1, QX, wy, 60, '#2f63c9', kf(t, [[Ls(1) + .6, 0], [Ls(1) + 3.6, 1]], x => x));
-  redCross(ctx, QX + boardW(ctx, w1, 60) + 60, wy - 20, 34, kf(t, [[Ls(2) + .2, 0], [Ls(2) + .5, 1]], x => x));
-  // 第三行紅底線
-  redUnderline(ctx, QX, QX + boardW(ctx, QL[2], QS) - 20, QY + 80 + 2 * QH + 16, kf(t, [[Ls(2) + 1.3, 0], [Ls(2) + 2.0, 1]], x => x));
+const PUNC = /[，。！？、：；「」…\s]/;
+// 台詞中某個詞開始唸的時間(依字數比例估)
+function tAt(i, sub) {
+  const s = LINES[i].text, k = s.indexOf(sub); if (k < 0) return Ls(i);
+  const cnt = str => [...str].filter(c => !PUNC.test(c)).length;
+  return Ls(i) + (Le(i) - Ls(i)) * cnt(s.slice(0, k)) / Math.max(cnt(s), 1);
 }
+const aimAt = (cx, cy, s, flip, X, Y) => ({ ik: [(X - cx) / s * flip, (Y - cy) / s], bend: -1 });
+const lin = x => x;
+// 大字彈出(關鍵數字用)
+function popText(ctx, str, x, y, size, col, t0, t, hold = 99) {
+  const k = kf(t, [[t0, 0], [t0 + .28, 1, backOut], [t0 + hold, 1], [t0 + hold + .2, 0]]); if (k <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.rotate(-.04);
+  text(ctx, str, 0, 0, size, col, '#fff', size * .16, '"Noto Sans CJK TC"', 900);
+  text(ctx, str, 0, 0, size, col, '#fff', 0, '"Noto Sans CJK TC"', 900); ctx.restore();
+}
+function qMark(ctx, x, y, s, a) { if (a <= 0) return; ctx.save(); ctx.globalAlpha = a; text(ctx, '?', x, y, s, '#2f63c9', '#fff', s * .14, '"Noto Sans CJK TC"', 900); text(ctx, '?', x, y, s, '#2f63c9', '#fff', 0, '"Noto Sans CJK TC"', 900); ctx.restore(); }
 
+// 題目(白板)
+const QL = ['箱內有 50 顆白球、10 顆紅球，', '抽球 31 次，每次抽一球。', '白球放回，紅球不放回。', '前 30 次抽出紅球 4 次，', '第 31 次抽出紅球的機率？'];
+const QX = BOARD.x + 40, QY = BOARD.y + 100, QH = 88, QS = 54;
+const WRONG = '10 ÷ 60 = 1/6';
+function boardQ(ctx, t, opt = {}) {
+  boardText(ctx, '這題錯在哪？', QX, QY - 10, 64, '#d8312b', 1);
+  QL.forEach((s, i) => boardText(ctx, s, QX, QY + 76 + i * QH, QS, i === 2 && opt.hl ? '#d8312b' : '#1f2a44', kf(t, [[i * .1, 0], [.15 + i * .1, 1]], lin)));
+  const wy = QY + 76 + 5 * QH + 40;
+  boardText(ctx, WRONG, QX, wy, 66, '#2f63c9', kf(t, [[tAt(0, '十除以'), 0], [tAt(0, '六分之一') + .5, 1]], lin));
+  if (opt.cross) redCross(ctx, QX + boardW(ctx, WRONG, 66) + 60, wy - 22, 36, kf(t, [[opt.cross, 0], [opt.cross + .35, 1]], lin));
+  redUnderline(ctx, QX, QX + boardW(ctx, QL[2], QS) - 10, QY + 76 + 2 * QH + 16, kf(t, [[tAt(1, '第三行'), 0], [tAt(1, '第三行') + .6, 1]], lin));
+}
 const SHOTS = [];
-// A — 開場:題目寫上白板,小宇走進來「這題我會!」
-SHOTS.push({ start: 0, end: Ls(1) - .1, tr: 'whip', draw(ctx, lt, t) {
-  const hh = handheld(t, 3); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1 + lt * .02, r: 0 };
-  classBG(ctx, cam, t); applyCam(ctx, cam, .8); boardContent(ctx, t); applyCam(ctx, cam, 1);
-  const walkK = inv(.4, 2.2, lt); const x = lerp(-150, 330, easeOut(walkK)); const walking = walkK < 1;
-  const arms = walking ? walkArms(lt) : { L: [.3, -.1], R: aimAt(x, FLOOR_Y, 560, 1, 600, 500) };
-  drawStick(ctx, C(XY, { x, y: FLOOR_Y, s: 560, bob: walking ? -Math.abs(Math.sin(lt * 9)) * .02 : 0, lean: walking ? .06 : 0,
-    legs: walking ? walkLegs(lt) : POSE.idle.legs, arms, face: { eyes: 'normal', mouth: walking ? 'smile' : 'grin', look: [.6, -.3], browAng: walking ? 0 : .25 } }));
+const cut = (i, d = .08) => Ls(i) - d;
+
+// A — 小宇自信解題:「送分題啦!」寫下 1/6、「收工!」
+SHOTS.push({ start: 0, end: cut(1), tr: 'cut', draw(ctx, lt, t) {
+  const hh = handheld(t, 3); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1.02 + lt * .012, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, .8); boardQ(ctx, t); applyCam(ctx, cam, 1);
+  const tw0 = tAt(0, '十除以'), tw1 = tAt(0, '六分之一') + .5, tDone = tAt(0, '收工');
+  const writing = t > tw0 && t < tw1, done = t > tDone;
+  const wr = Math.sin(lt * 18) * .12;
+  const arms = done ? { L: [.9, -2.2], R: [2.6 + Math.sin(lt * 10) * .15, .2] }
+    : writing ? { L: [.3, -.1], R: aimAt(300, FLOOR_Y, 560, 1, 300 + (t - tw0) / (tw1 - tw0) * 420 + wr * 80, 900) }
+    : { L: [.9, -2.2], R: [.9, -2.2] };
+  drawStick(ctx, C(XY, { x: 300, y: FLOOR_Y, s: 560, bob: done ? -Math.abs(Math.sin(lt * 9)) * .02 : 0, lean: done ? -.06 : 0, arms,
+    face: { eyes: done ? 'happy' : 'normal', mouth: done ? 'grin' : (writing ? 'smirk' : 'grin'), look: writing ? [.7, -.6] : [.3, -.1], browAng: .25 } }));
+  popText(ctx, '送分題！', 760, 1180, 110, '#d8312b', tAt(0, '送分題'), t, tAt(0, '十除以') - tAt(0, '送分題'));
+  popText(ctx, '1/6', 760, 1180, 150, '#2f63c9', tAt(0, '六分之一'), t, tDone - tAt(0, '六分之一'));
+  if (done) { const a = kf(t, [[tDone, 0], [tDone + .15, 1], [Le(0) + .2, 1]]); sparkle(ctx, 520, 1020, 60 * a, a); sparkle(ctx, 120, 1060, 44 * a, a); }
 } });
-// B — 小宇在白板寫錯誤算法,舉雙手很得意
-SHOTS.push({ start: Ls(1) - .1, end: Ls(2) - .05, tr: 'cut', draw(ctx, lt, t) {
-  const hh = handheld(t, 3); const cam = { x: 500 + hh[0], y: 1000 + hh[1], z: 1.08 + lt * .015, r: 0 };
-  classBG(ctx, cam, t); applyCam(ctx, cam, .8); boardContent(ctx, t); applyCam(ctx, cam, 1);
-  const done = t > Ls(1) + 3.6; const writeArm = Math.sin(lt * 16) * .15;
-  drawStick(ctx, C(XY, { x: 330, y: FLOOR_Y, s: 560, bob: done ? -Math.abs(Math.sin(lt * 7)) * .03 : 0,
-    arms: done ? POSE.handsUp.arms : { L: [.3, -.1], R: aimAt(330, FLOOR_Y, 560, 1, 520 + writeArm * 200, 860) },
-    face: { eyes: done ? 'happy' : 'normal', mouth: done ? 'grin' : 'smile', look: [.5, -.4], browAng: .3 } }));
-  if (done) { const a = kf(lt, [[3.7, 0], [3.9, 1], [4.6, 0]]); sparkle(ctx, 470, 1000, 60 * a, a); sparkle(ctx, 200, 980, 45 * a, a); }
+// B — 老師冷冷出現,指揮棒點第三行;小宇僵住
+SHOTS.push({ start: cut(1), end: cut(2), tr: 'cut', draw(ctx, lt, t) {
+  const hh = handheld(t, 2); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1.0, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, .8); boardQ(ctx, t); applyCam(ctx, cam, 1);
+  const k = inv(0, .5, lt); const tx = lerp(1300, 820, easeOut(k));
+  const aim = k >= 1;
+  drawStick(ctx, C(XY, { x: 300, y: FLOOR_Y, s: 560, arms: { L: [2.6, .2], R: [2.6, .2] },
+    face: { eyes: lt > .6 ? 'wide' : 'happy', mouth: lt > .6 ? 'flat' : 'grin', look: [.8, 0] } }));
+  if (lt > .8) sweat(ctx, 400, 1020, 24, clamp((lt - .8) * 4));
+  drawStick(ctx, C(TC, { x: tx, y: FLOOR_Y, s: 640, flip: -1, legs: k < 1 ? walkLegs(lt, 14) : POSE.idle.legs,
+    arms: aim ? { L: [.3, -.1], R: aimAt(tx, FLOOR_Y, 640, -1, QX + 340, QY + 76 + 2 * QH - 10) } : walkArms(lt, 14),
+    prop: aim ? pointerProp(.95) : null, face: { eyes: 'half', mouth: 'flat', look: [-.6, -.2] } }));
 } });
-// C — 老師走進來:「等一下!」紅叉、第三行畫紅線
-SHOTS.push({ start: Ls(2) - .05, end: Ls(3) - .1, tr: 'whip', draw(ctx, lt, t) {
-  const hh = handheld(t, 4); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1.0 + lt * .015, r: 0 };
-  classBG(ctx, cam, t); applyCam(ctx, cam, .8); boardContent(ctx, t); applyCam(ctx, cam, 1);
-  const k = inv(0, 1.1, lt); const tx = lerp(1250, 800, easeOut(k)); const walking = k < 1;
-  const scared = lt > .25;
-  drawStick(ctx, C(XY, { x: 300, y: FLOOR_Y, s: 560, bob: scared ? -Math.abs(Math.sin((lt - .25) * 14)) * .04 * clamp(1 - (lt - .25) * 2) : 0,
-    arms: { L: [.5, -.4], R: [.5, -.4] }, face: { eyes: scared ? 'wide' : 'normal', mouth: scared ? 'o' : 'grin', browUp: scared ? 1 : 0, look: [.7, 0] } }));
-  if (scared) sweat(ctx, 390, 1010, 26, clamp((lt - .3) * 4));
-  const aim = !walking;
-  drawStick(ctx, C(TC, { x: tx, y: FLOOR_Y, s: 640, flip: -1, bob: walking ? -Math.abs(Math.sin(lt * 9)) * .02 : 0,
-    legs: walking ? walkLegs(lt) : POSE.idle.legs,
-    arms: aim ? { L: [.3, -.1], R: aimAt(tx, FLOOR_Y, 640, -1, QX + 330, QY + 80 + 2 * QH) } : walkArms(lt),
-    prop: aim ? pointerProp(.95) : null,
-    face: { eyes: 'normal', mouth: walking ? 'o' : 'smile', look: [-.6, -.2], browAng: -.15 } }));
-  // 「!」
-  const ex = kf(lt, [[.15, 0], [.35, 1, backOut], [1.4, 1], [1.6, 0]]);
-  if (ex > 0) { ctx.save(); ctx.translate(880, 900); ctx.scale(ex, ex); burst(ctx, 0, 0, 80, 11, '#ffd23a'); text(ctx, '!', 0, 4, 90, '#d8312b', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore(); }
-} });
-// D — 白板特寫:紅球被抽走 4 顆、沒放回
-SHOTS.push({ start: Ls(3) - .1, end: Ls(4) - .1, tr: 'whip', draw(ctx, lt, t) {
-  const hh = handheld(t, 3); const cam = { x: 540 + hh[0], y: 620 + hh[1], z: 1.12 + lt * .02, r: 0 };
-  classBG(ctx, cam, t); applyCam(ctx, cam, .8);
-  boardText(ctx, '紅球', 150, 330, 80, '#d8312b'); boardText(ctx, '拿走了，沒放回！', 330, 330, 72, '#1f2a44', kf(lt, [[.2, 0], [1.0, 1]], x => x));
-  const bx = 130, by = 420, bw = 520, bh = 300;
-  rrect(ctx, bx, by, bw, bh, 16); fillStroke(ctx, '#f6e7c8', 8);
-  boardText(ctx, '箱子', bx + 20, by + bh + 60, 48, '#8a5a2c');
-  rrect(ctx, 720, 520, 240, 200, 16); fillStroke(ctx, '#ffffff', 6); boardText(ctx, '拿出來', 760, 770, 48, '#8a5a2c');
-  let out = 0;
-  for (let i = 0; i < 10; i++) {
-    const col = i % 5, row = Math.floor(i / 5); let x = bx + 70 + col * 95, y = by + 90 + row * 120;
-    const jt = 1.2 + i * .55;
-    if (i < 4) { const k = clamp((lt - jt) / .45); if (k >= 1) out++; if (k > 0) { x = lerp(x, 780 + (i % 2) * 110, easeOut(k)); y = lerp(y, 580 + Math.floor(i / 2) * 90, k) - Math.sin(k * Math.PI) * 200; } }
-    ball(ctx, x, y, 38, true);
-  }
-  const n = 10 - out, pop = clamp((lt - (1.2 + (out - 1) * .55 + .45)) / .2);
-  ctx.save(); ctx.translate(390, 880); const sc = out ? 1 + .15 * (1 - pop) : 1; ctx.scale(sc, sc);
-  boardText(ctx, `紅球剩 ${n} 顆`, 0, 0, 84, '#d8312b', 1, 'center'); ctx.restore();
-} });
-// E — 算出 3/28,圈 (D)
-SHOTS.push({ start: Ls(4) - .1, end: Ls(5) - .1, tr: 'cut', draw(ctx, lt, t) {
-  const hh = handheld(t, 3); const cam = { x: 540 + hh[0], y: 900 + hh[1], z: 1.05 + lt * .012, r: 0 };
-  classBG(ctx, cam, t); applyCam(ctx, cam, .8);
-  boardText(ctx, '紅球：10 - 4 = 6', QX, QY + 40, 66, '#d8312b', kf(lt, [[.1, 0], [1.2, 1]], x => x));
-  boardText(ctx, '總數：50 + 6 = 56', QX, QY + 160, 66, '#1f2a44', kf(lt, [[1.4, 0], [2.6, 1]], x => x));
-  boardText(ctx, '6/56 = 3/28', QX, QY + 300, 96, '#1f2a44', kf(lt, [[3.0, 0], [4.6, 1]], x => x));
-  const opts = ['(A) 1/5', '(B) 1/6', '(C) 5/12', '(D) 3/28'];
-  opts.forEach((s, i) => boardText(ctx, s, QX + (i % 2) * 430, QY + 440 + Math.floor(i / 2) * 100, 60, '#1f2a44', 1));
-  redCircle(ctx, QX + 430 + 120, QY + 540 - 20, 150, 56, kf(lt, [[5.0, 0], [5.6, 1]], x => x));
-  redCross(ctx, QX + 430 + 280, QY + 440 - 20, 26, 1);
+// C — 白板特寫第三行;小宇唸完攤手「然後呢?」
+SHOTS.push({ start: cut(2), end: cut(3), tr: 'whip', draw(ctx, lt, t) {
+  const hh = handheld(t, 3); const cam = { x: 480 + hh[0], y: 780 + hh[1], z: 1.25 + lt * .02, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, .8); boardQ(ctx, t, { hl: true });
+  // 圈「放回」「不放回」
+  const y3 = QY + 76 + 2 * QH - 18;
+  const wx = str => boardW(ctx, str, QS);
+  const c1 = QX + wx('白球') + wx('放回') / 2, c2 = QX + wx('白球放回，紅球') + wx('不放回') / 2;
+  redCircle(ctx, c1, y3, wx('放回') / 2 + 22, 40, kf(t, [[tAt(2, '白球放回'), 0], [tAt(2, '白球放回') + .4, 1]], lin));
+  redCircle(ctx, c2, y3, wx('不放回') / 2 + 22, 40, kf(t, [[tAt(2, '紅球不放回'), 0], [tAt(2, '紅球不放回') + .4, 1]], lin));
   applyCam(ctx, cam, 1);
-  drawStick(ctx, C(TC, { x: 820, y: FLOOR_Y, s: 640, flip: -1,
-    arms: { L: [.3, -.1], R: aimAt(820, FLOOR_Y, 640, -1, lt < 4.8 ? QX + 400 : QX + 600, lt < 4.8 ? QY + 250 : QY + 520) }, prop: pointerProp(.62),
-    face: { eyes: 'normal', mouth: 'smile', look: [-.6, -.3] } }));
-  drawStick(ctx, C(XY, { x: 280, y: FLOOR_Y, s: 520, arms: { L: [.3, -.1], R: [.9, -2.2] }, face: { eyes: 'normal', mouth: 'flat', look: [.7, -.5], browAng: -.1 } }));
+  const shrug = t > tAt(2, '然後呢');
+  drawStick(ctx, C(XY, { x: 260, y: FLOOR_Y + 40, s: 560, arms: shrug ? { L: [1.6, -.9], R: [1.6, -.9] } : { L: [.3, -.1], R: [.9, -2.2] },
+    headTilt: shrug ? .18 : 0, face: { eyes: 'normal', mouth: shrug ? 'o' : 'flat', look: shrug ? [0, 0] : [.6, -.6], browUp: shrug ? 1 : 0 } }));
+  if (shrug) { const a = clamp((t - tAt(2, '然後呢')) * 4); qMark(ctx, 380, 1010 - a * 20, 90, a); qMark(ctx, 150, 1040 - a * 30, 64, a); }
 } });
-// F — 小宇懂了,開心跳起來
-SHOTS.push({ start: Ls(5) - .1, end: Ls(6) - .1, tr: 'whip', draw(ctx, lt, t) {
-  const hh = handheld(t, 3); const cam = { x: 420 + hh[0], y: 1150 + hh[1], z: 1.45 - lt * .03, r: 0 };
-  classBG(ctx, cam, t); applyCam(ctx, cam, 1);
-  const jump = Math.abs(Math.sin(lt * 5)) * .12;
-  drawStick(ctx, C(XY, { x: 400, y: FLOOR_Y, s: 600, bob: -jump, squash: 1 - jump * .3, arms: POSE.handsUp.arms, legs: { L: [.3, -.6 * jump * 6], R: [.3, -.6 * jump * 6] },
-    face: { eyes: 'happy', mouth: 'grin', blush: true } }));
-  const a = .5 + .5 * Math.sin(lt * 6); sparkle(ctx, 640, 900, 60 * a, a); sparkle(ctx, 180, 950, 50 * (1 - a), 1 - a);
-} });
-// G — 口訣卡
-SHOTS.push({ start: Ls(6) - .1, end: Ls(7) - .1, tr: 'whip', draw(ctx, lt, t) {
-  const hh = handheld(t, 2); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1.0, r: 0 };
-  classBG(ctx, cam, t); applyCam(ctx, cam, 1);
-  ctx.save(); ctx.fillStyle = 'rgba(20,20,40,.25)'; ctx.fillRect(-600, -600, 2280, 3200); ctx.restore();
-  const k = kf(lt, [[0, 0], [.45, 1, backOut]]);
-  ctx.save(); ctx.translate(540, 760); ctx.rotate(-.03); ctx.scale(k, k);
-  rrect(ctx, -420, -330, 840, 660, 26); fillStroke(ctx, '#fffaf0', 10);
-  boardText(ctx, '記住這句', 0, -200, 84, '#d8312b', 1, 'center');
-  boardText(ctx, '紅球不放回，', 0, -40, 84, '#1f2a44', kf(lt, [[.6, 0], [1.6, 1]], x => x), 'center');
-  boardText(ctx, '紅球數和總數', 0, 90, 84, '#1f2a44', kf(lt, [[1.6, 0], [2.6, 1]], x => x), 'center');
-  boardText(ctx, '都要一起減！', 0, 220, 84, '#d8312b', kf(lt, [[2.6, 0], [3.5, 1]], x => x), 'center');
-  ctx.restore();
-} });
-// H — 結尾 CTA:留言「考卷」+ 品牌標語,兩人揮手
-SHOTS.push({ start: Ls(7) - .1, end: Le(7) + 1.2, tr: 'cut', draw(ctx, lt, t) {
+// D — 抽球動畫:白球抽出又彈回、紅球被抽走 4 顆
+SHOTS.push({ start: cut(3), end: cut(4), tr: 'whip', draw(ctx, lt, t) {
   const hh = handheld(t, 2); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1.0, r: 0 };
   classBG(ctx, cam, t); applyCam(ctx, cam, .8);
-  boardText(ctx, '考完的考卷，', 540, BOARD.y + 150, 70, '#1f2a44', kf(lt, [[0, 0], [.8, 1]], x => x), 'center');
-  boardText(ctx, '想知道錯在哪？', 540, BOARD.y + 260, 70, '#1f2a44', kf(lt, [[.8, 0], [1.6, 1]], x => x), 'center');
-  const k = kf(lt, [[2.0, 0], [2.4, 1, backOut]]);
-  ctx.save(); ctx.translate(540, BOARD.y + 440); ctx.scale(k, k); boardText(ctx, '留言「考卷」', 0, 30, 130, '#d8312b', 1, 'center'); ctx.restore();
-  redCircle(ctx, 540, BOARD.y + 420, 380, 110, kf(lt, [[2.5, 0], [3.1, 1]], x => x));
-  boardText(ctx, '我們免費幫你分析', 540, BOARD.y + 640, 64, '#1f2a44', kf(lt, [[3.2, 0], [4.0, 1]], x => x), 'center');
+  const bx = 120, by = 330, bw = 560, bh = 520;
+  rrect(ctx, bx, by, bw, bh, 18); fillStroke(ctx, '#f6e7c8', 8);
+  boardText(ctx, '箱子', bx + 20, by - 26, 52, '#8a5a2c');
+  rrect(ctx, 740, 470, 220, 380, 18); fillStroke(ctx, '#ffffff', 6); boardText(ctx, '拿走', 795, 450, 52, '#d8312b');
+  // 抽球順序:W=白(彈回) R=紅(拿走)
+  const seq = 'WRWWRWRWR', dt = (Le(3) - Ls(3) - .2) / seq.length, t0 = .25;
+  let rOut = 0; const outPos = [];
+  // 白球(代表 50 顆)
+  for (let i = 0; i < 18; i++) { const c = i % 6, r = Math.floor(i / 6); ball(ctx, bx + 70 + c * 82, by + 80 + r * 80, 32, false); }
+  boardText(ctx, '白 ×50', bx + 380, by + bh - 30, 48, '#1f2a44');
+  seq.split('').forEach((ch, j) => {
+    const p = (lt - t0 - j * dt) / dt; if (ch === 'R' && p >= 1) rOut++;
+    if (p <= 0 || p >= 1 && ch === 'W') return;
+    const sx = bx + bw / 2, sy = by + 60;
+    if (ch === 'W') { const y = sy + 40 - Math.sin(p * Math.PI) * 110; ball(ctx, sx, y, 34, false); if (p > .6) { text(ctx, '放回', sx + 90, y, 40, '#3fa35b', '#fff', 6, '"Noto Sans CJK TC"', 900); } }
+  });
+  // 紅球:10 顆,前幾顆依序飛到「拿走」
+  let ri = 0;
+  for (let i = 0; i < 10; i++) {
+    const c = i % 5, r = Math.floor(i / 5); let x = bx + 80 + c * 95, y = by + 330 + r * 80;
+    if (i < 4) {
+      // 第 i 顆紅球對應 seq 中第 i 個 R
+      let j = -1, n = 0; for (let q = 0; q < seq.length; q++) if (seq[q] === 'R') { if (n === i) { j = q; break; } n++; }
+      const p = clamp((lt - t0 - j * dt) / dt);
+      if (p > 0) { const tx = 805 + (i % 2) * 90, ty = 560 + Math.floor(i / 2) * 110; x = lerp(x, tx, easeOut(p)); y = lerp(y, ty, p) - Math.sin(p * Math.PI) * 240; }
+    }
+    ball(ctx, x, y, 36, true);
+  }
+  boardText(ctx, `紅 ×${10 - rOut}`, bx + 40, by + bh + 80, 72, '#d8312b');
+  const n30 = Math.min(30, Math.floor(clamp((lt - t0) / (seq.length * dt)) * 30));
+  boardText(ctx, `第 ${Math.max(n30, 1)} 次`, 740, 930, 60, '#8a5a2c');
+  applyCam(ctx, cam, 1);
+  drawStick(ctx, C(TC, { x: 860, y: FLOOR_Y, s: 600, flip: -1, arms: { L: [.3, -.1], R: aimAt(860, FLOOR_Y, 600, -1, 700, 900) }, prop: pointerProp(.5), face: { eyes: 'half', mouth: 'flat', look: [-.5, -.3] } }));
+} });
+// E — 「蛤?那它們去哪了?」小宇大特寫東張西望
+SHOTS.push({ start: cut(4), end: cut(5), tr: 'cut', draw(ctx, lt, t) {
+  const sk = lt < .35 ? shake(lt * 4, 14, 1, 3) : [0, 0];
+  const cam = { x: 360 + sk[0], y: 1180 + sk[1], z: 2.0, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, 1);
+  const lookX = Math.sin(lt * 5) * .9;
+  drawStick(ctx, C(XY, { x: 360, y: FLOOR_Y, s: 560, arms: { L: [2.2, -.6], R: [2.2, -.6] }, headTilt: Math.sin(lt * 5) * .12,
+    face: { eyes: 'wide', mouth: 'o', look: [lookX, -.2], browUp: 1 } }));
+  if (lt < .5) { const a = kf(lt, [[0, 0], [.15, 1, backOut]]); ctx.save(); ctx.translate(560, 950); ctx.scale(a, a); burst(ctx, 0, 0, 90, 11, '#ffd23a'); text(ctx, '蛤', 0, 4, 80, '#d8312b', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore(); }
+} });
+// F — 老師冷面:「跟你的零用錢一樣」→ 小宇石化
+SHOTS.push({ start: cut(5), end: cut(6), tr: 'cut', draw(ctx, lt, t) {
+  const tz = tAt(5, '零用錢'); const stone = t > tz + .25; const sk = stone && t < tz + .6 ? shake(t * 5, 10, 1, 4) : [0, 0];
+  const cam = { x: 560 + sk[0], y: 1060 + sk[1], z: 1.25, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, 1);
+  drawStick(ctx, C(TC, { x: 800, y: FLOOR_Y, s: 640, flip: -1, arms: { L: [.3, -.1], R: [.9, -2.2] },
+    face: { eyes: 'half', mouth: t > tz ? 'smirk' : 'flat', look: [-.6, 0] } }));
+  ctx.save(); if (stone) ctx.filter = 'grayscale(1) contrast(.85) brightness(1.05)';
+  drawStick(ctx, C(XY, { x: 330, y: FLOOR_Y, s: 560, arms: stone ? { L: [.5, -.6], R: [.5, -.6] } : { L: [.3, -.1], R: [.3, -.1] },
+    face: { eyes: stone ? 'wide' : 'normal', mouth: stone ? 'o' : 'flat', look: [.6, 0], browUp: stone ? 1 : 0 } }));
+  ctx.restore();
+  if (stone) {
+    const a = clamp((t - tz - .25) * 6);
+    ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = '#555'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(300, 1120); ctx.lineTo(320, 1160); ctx.lineTo(305, 1200); ctx.lineTo(330, 1250); ctx.moveTo(360, 1300); ctx.lineTo(345, 1350); ctx.lineTo(365, 1390); ctx.stroke(); ctx.restore();
+    // 碎石掉落
+    for (let i = 0; i < 5; i++) { const p = ((t - tz - .3) * 1.2 + i * .23) % 1; if (t - tz - .3 > i * .15) { circle(ctx, 250 + i * 38, 1250 + p * 300, 9 + (i % 3) * 3); fillStroke(ctx, '#9a9a9a', 3); } }
+    popText(ctx, '石化', 330, 900, 96, '#6b6b6b', tz + .3, t);
+  }
+  // 零用錢飛走(錢幣)
+  if (t > tz) { const p = clamp((t - tz) / 1.2); for (let i = 0; i < 3; i++) { const x = 420 + p * 600 + i * 50, y = 1150 - p * 520 - i * 40; circle(ctx, x, y, 28); fillStroke(ctx, '#f2c230', 5); text(ctx, '$', x, y + 2, 34, '#9a6a00', INK, 0, '"Noto Sans CJK TC"', 900); } }
+} });
+// G — 小宇恢復、扳手指:紅剩 6、全部剩 56
+SHOTS.push({ start: cut(6), end: cut(7), tr: 'whip', draw(ctx, lt, t) {
+  const hh = handheld(t, 2); const cam = { x: 540 + hh[0], y: 900 + hh[1], z: 1.05, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, .8);
+  boardText(ctx, '紅球：10 − 4 = 6', QX, QY + 60, 70, '#d8312b', kf(t, [[tAt(6, '紅球剩'), 0], [tAt(6, '紅球剩') + 1, 1]], lin));
+  boardText(ctx, '全部：60 − 4 =', QX, QY + 200, 70, '#1f2a44', kf(t, [[tAt(6, '全部'), 0], [tAt(6, '全部') + .8, 1]], lin));
+  popText(ctx, '56', QX + 610, QY + 180, 140, '#d8312b', tAt(6, '五十六'), t);
+  applyCam(ctx, cam, 1);
+  const cnt = Math.sin(lt * 7) * .2;
+  drawStick(ctx, C(XY, { x: 300, y: FLOOR_Y, s: 560, arms: { L: [1.2 + cnt, -1.4], R: [1.2 - cnt, -1.4] }, face: { eyes: 'normal', mouth: 'flat', look: [.3, .4], browAng: -.15 } }));
+  drawStick(ctx, C(TC, { x: 840, y: FLOOR_Y, s: 640, flip: -1, arms: { L: [.3, -.1], R: [.9, -2.2] }, face: { eyes: 'normal', mouth: 'smile', look: [-.6, 0] } }));
+} });
+// H — 老師:6/56 = 3/28,1/6 被打叉
+SHOTS.push({ start: cut(7), end: cut(8), tr: 'cut', draw(ctx, lt, t) {
+  const hh = handheld(t, 2); const cam = { x: 540 + hh[0], y: 900 + hh[1], z: 1.05 + lt * .01, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, .8);
+  boardText(ctx, '紅球：10 − 4 = 6', QX, QY + 60, 70, '#d8312b');
+  boardText(ctx, '全部：60 − 4 = 56', QX, QY + 200, 70, '#1f2a44');
+  boardText(ctx, '6 ÷ 56 =', QX, QY + 380, 84, '#1f2a44', kf(t, [[Ls(7), 0], [tAt(7, '二十八') - .1, 1]], lin));
+  popText(ctx, '3/28', QX + 600, QY + 350, 150, '#d8312b', tAt(7, '二十八分之三'), t);
+  redCircle(ctx, QX + 600, QY + 352, 190, 95, kf(t, [[tAt(7, '二十八分之三') + .6, 0], [tAt(7, '二十八分之三') + 1.1, 1]], lin));
+  boardText(ctx, '1/6', QX + 40, QY + 560, 70, '#2f63c9'); redCross(ctx, QX + 90, QY + 535, 40, kf(t, [[tAt(7, '二十八分之三') + 1.2, 0], [tAt(7, '二十八分之三') + 1.5, 1]], lin));
+  applyCam(ctx, cam, 1);
+  drawStick(ctx, C(TC, { x: 840, y: FLOOR_Y, s: 640, flip: -1, arms: { L: [.3, -.1], R: aimAt(840, FLOOR_Y, 640, -1, 760, 760) }, prop: pointerProp(.7), face: { eyes: 'normal', mouth: 'smile', look: [-.6, -.3] } }));
+  drawStick(ctx, C(XY, { x: 260, y: FLOOR_Y, s: 540, arms: { L: [.3, -.1], R: [.3, -.1] }, face: { eyes: 'wide', mouth: 'o', look: [.7, -.6], browUp: 1 } }));
+} });
+// I — 「我的六分之一……」小宇蹲在角落,頭上烏雲
+SHOTS.push({ start: cut(8), end: cut(9), tr: 'whip', draw(ctx, lt, t) {
+  const cam = { x: 300, y: 1250, z: 1.6, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, 1);
+  ctx.save(); ctx.fillStyle = 'rgba(30,30,60,.18)'; ctx.fillRect(-600, -600, 2400, 3200); ctx.restore();
+  drawStick(ctx, C(XY, { x: 230, y: FLOOR_Y, s: 520, bob: .14, lean: .15, legs: { L: [1.3, -2.4], R: [1.2, -2.3] }, arms: { L: [1.0, -1.3], R: [1.1, -1.2] },
+    headTilt: .25, face: { eyes: 'half', mouth: 'frown', look: [.2, .6], browAng: -.3 } }));
+  // 烏雲 + 雨
+  ctx.save(); ctx.globalAlpha = clamp(lt * 3); cloudShape(ctx, 240, 1100 + Math.sin(lt * 2) * 5, 55, 3); fillStroke(ctx, '#8a93a0', 4);
+  for (let i = 0; i < 7; i++) { const p = (lt * 1.6 + i * .37) % 1; line(ctx, 190 + i * 16, 1135 + p * 70, 186 + i * 16, 1150 + p * 70, 4, '#6fa8dc'); }
+  ctx.restore();
+  // 小紙條 1/6 掉下
+  const p = clamp(lt / 1.2); ctx.save(); ctx.translate(110, 1300 + p * 220); ctx.rotate(p * 1.2 - .3); rrect(ctx, -50, -34, 100, 68, 6); fillStroke(ctx, '#fffaf0', 4); text(ctx, '1/6', 0, 2, 40, '#2f63c9', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore();
+} });
+// J — CTA:留言「考卷」+ logo + 標語(在 IG 安全區內)
+SHOTS.push({ start: cut(9), end: Le(9) + 2.2, tr: 'cut', draw(ctx, lt, t) {
+  const hh = handheld(t, 2); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1.0, r: 0 };
+  classBG(ctx, cam, t); applyCam(ctx, cam, .8);
+  boardText(ctx, '你的考卷也有陷阱嗎？', 540, BOARD.y + 140, 68, '#1f2a44', kf(t, [[Ls(9), 0], [Ls(9) + .9, 1]], lin), 'center');
+  const k = kf(t, [[tAt(9, '留言'), 0], [tAt(9, '留言') + .35, 1, backOut]]);
+  ctx.save(); ctx.translate(540, BOARD.y + 330); ctx.scale(k, k); boardText(ctx, '留言「考卷」', 0, 40, 140, '#d8312b', 1, 'center'); ctx.restore();
+  redCircle(ctx, 540, BOARD.y + 320, 400, 120, kf(t, [[tAt(9, '留言') + .4, 0], [tAt(9, '留言') + 1.0, 1]], lin));
+  boardText(ctx, '老師免費幫你抓陷阱', 540, BOARD.y + 560, 64, '#1f2a44', kf(t, [[tAt(9, '我們免費'), 0], [tAt(9, '我們免費') + .9, 1]], lin), 'center');
+  // logo + 帳號
+  const b = kf(t, [[Le(9) - .3, 0], [Le(9) + .1, 1]]);
+  if (b > 0) { ctx.save(); ctx.globalAlpha = b; if (window.LOGO && LOGO.complete) { ctx.save(); circle(ctx, 230, BOARD.y + 690, 52); ctx.clip(); ctx.drawImage(LOGO, 178, BOARD.y + 638, 104, 104); ctx.restore(); }
+    text(ctx, '@yuchengtutoring', 590, BOARD.y + 692, 58, '#17253d', INK, 0, 'Poppins', 700); ctx.restore(); }
   applyCam(ctx, cam, 1);
   const wave = Math.sin(lt * 8) * .35;
-  drawStick(ctx, C(XY, { x: 280, y: FLOOR_Y, s: 540, arms: { L: [.3, -.1], R: [2.6 + wave, .3] }, face: { eyes: 'happy', mouth: 'grin' } }));
-  drawStick(ctx, C(TC, { x: 800, y: FLOOR_Y, s: 640, flip: -1, arms: { L: [.3, -.1], R: [2.5 - wave, .3] }, face: { eyes: 'normal', mouth: 'smile', look: [-.3, 0] } }));
-  const b = kf(lt, [[4.2, 0], [4.6, 1]]);
-  if (b > 0) { ctx.save(); ctx.globalAlpha = b; rrect(ctx, 140, 1700, 800, 110, 26); fillStroke(ctx, '#17253d', 0); text(ctx, '宇誠文理｜孩子的專屬家教團隊', 540, 1755, 50, '#ffd23a', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore(); }
+  drawStick(ctx, C(XY, { x: 270, y: FLOOR_Y, s: 520, arms: { L: [.3, -.1], R: [2.6 + wave, .3] }, face: { eyes: 'happy', mouth: 'grin' } }));
+  drawStick(ctx, C(TC, { x: 820, y: FLOOR_Y, s: 620, flip: -1, arms: { L: [.3, -.1], R: [2.5 - wave, .3] }, face: { eyes: 'normal', mouth: 'smile', look: [-.3, 0] } }));
+  const c = kf(t, [[Le(9), 0], [Le(9) + .4, 1]]);
+  if (c > 0) { ctx.save(); ctx.globalAlpha = c; rrect(ctx, 120, 988, 840, 96, 26); fillStroke(ctx, '#17253d', 0); text(ctx, '宇誠文理｜孩子的專屬家教團隊', 540, 1037, 48, '#ffd23a', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore(); }
 } });
+window.LOGO = new Image(); LOGO.src = 'logo.png';
