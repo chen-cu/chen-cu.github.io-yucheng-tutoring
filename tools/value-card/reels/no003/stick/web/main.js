@@ -24,15 +24,15 @@ function drawCaption(ctx, t) {
   const c = CHUNKS.find(c => t >= c.s && t < c.e); if (!c) return;
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
   const col = c.who === '老師' ? '#ffe7a3' : '#ffffff';
-  text(ctx, capText(c.text), 540, 1330, 62, col, '#141414', 12, '"Noto Sans CJK TC"', 900);
-  text(ctx, capText(c.text), 540, 1330, 62, col, '#141414', 0, '"Noto Sans CJK TC"', 900);
+  text(ctx, capText(c.text), 540, 1420, 62, col, '#141414', 12, '"Noto Sans CJK TC"', 900);
+  text(ctx, capText(c.text), 540, 1420, 62, col, '#141414', 0, '"Noto Sans CJK TC"', 900);
   ctx.restore();
 }
 function renderShot(ctx, i, t) {
   const s = SHOTS[i];
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.filter = 'none';
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  ctx.save(); s.draw(ctx, t - s.start, t); ctx.restore();
+  window.CUR_T = t; ctx.save(); s.draw(ctx, t - s.start, t); ctx.restore();
 }
 function blit(src, dx, blur) {
   // horizontal motion blur by averaging shifted copies
@@ -54,11 +54,6 @@ function renderFrame(f) {
   if (prev && prev.tr === 'whip' && t < s.start + WT) { const p = 1 - easeOut((t - s.start) / WT); dx = p * 420; blur = p * 260; }
   renderShot(bctx, i, t);
   blit(buf, dx, blur);
-  // grade: vignette + grain
-  out.save(); out.setTransform(1, 0, 0, 1, 0, 0);
-  const g = out.createRadialGradient(540, 900, 500, 540, 960, 1250); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(10,5,20,.32)'); out.fillStyle = g; out.fillRect(0, 0, W, H);
-  out.globalCompositeOperation = 'overlay'; out.globalAlpha = .07; const gr = grains[f % 4]; const pat = out.createPattern(gr, 'repeat'); out.fillStyle = pat; out.translate((f * 37) % 256, (f * 91) % 256); out.fillRect(-256, -256, W + 512, H + 512);
-  out.restore();
   drawCaption(out, tNew);
 }
 window.renderFrame = renderFrame; window.TOTAL_FRAMES = TOTAL_FRAMES; window.DUR = DUR;

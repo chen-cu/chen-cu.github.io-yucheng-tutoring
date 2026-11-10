@@ -35,4 +35,15 @@ if parts:   # 依時間點把各句混成一條旁白
     fl = ''.join(f'[{k}]adelay={int(st*1000)}|{int(st*1000)}[a{k}];' for k, (st, _) in enumerate(parts))
     fl += ''.join(f'[a{k}]' for k in range(len(parts))) + f'amix=inputs={len(parts)}:normalize=0[o]'
     subprocess.run(cmd + ['-filter_complex', fl, '-map', '[o]', '-ar', '44100', os.path.join(here, 'audio', 'vo.wav')], check=True)
+# 嘴型用:每格(1/30 秒)的人聲音量 0~1
+import numpy as np
+vo = os.path.join(here, 'audio', 'vo.wav')
+if os.path.exists(vo):
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', vo, '-ac', '1', '-ar', '24000', '-f', 'f32le', '-'], capture_output=True).stdout
+    a = np.frombuffer(raw, np.float32); n = len(a) // 800
+    e = np.sqrt((a[:n * 800].reshape(n, 800) ** 2).mean(1))
+    for l in lines:   # 每句各自正規化(兩個角色音量不同)
+        i0, i1 = int(l['s'] * 30), min(int(l['e'] * 30) + 1, n); e[i0:i1] = e[i0:i1] / (np.percentile(e[i0:i1], 90) + 1e-9)
+    e = np.clip(e, 0, 1)
+    open(os.path.join(here, 'web', 'words.js'), 'a', encoding='utf-8').write('const ENV=' + json.dumps([round(float(x), 2) for x in e]) + ';\n')
 print('lines', [(l['s'], l['e']) for l in lines], 'end', round(t, 2))

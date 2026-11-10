@@ -196,6 +196,7 @@ function drawFace(ctx, hx, hy, hr, f, o, sil) {
   else if (m === 'flat') { line(ctx, mx - .03, my, mx + .03, my, .014); }
   else if (m === 'frown') { ctx.beginPath(); ctx.arc(mx, my + .04, .04, Math.PI + .6, -.6); ctx.stroke(); }
   else if (m === 'smirk') { ctx.beginPath(); ctx.moveTo(mx - .035, my + .005); ctx.quadraticCurveTo(mx + .01, my + .02, mx + .045, my - .02); ctx.stroke(); }
+  else if (m === 'talk') { const op = f.open || 0; ellipse(ctx, mx, my + .004, .024 - op * .004, .008 + op * .03); fillStroke(ctx, '#7a2630', .009, INK); }
   else if (m === 'o') { ellipse(ctx, mx, my + .005, .02, .026); fillStroke(ctx, '#5a1e24', .012); }
   else if (m === 'grin' || m === 'teeth') {
     const w = m === 'teeth' ? .06 : .058, h = m === 'teeth' ? .045 : .042;
