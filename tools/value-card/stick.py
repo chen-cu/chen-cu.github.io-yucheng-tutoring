@@ -16,8 +16,15 @@ SHADOW = (200, 214, 228, 255)
 SS = 3   # 超取樣倍率,畫大再縮小 = 線條平滑
 import os
 # 頭部用設定圖切下的素材(頭髮、五官跟設定圖一模一樣);圓心與半徑是素材上的像素位置
-HEAD = {'file': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xiaoyu_head.png'), 'cx': 161, 'cy': 205, 'r': 157}
-_head = None
+_DIR = os.path.dirname(os.path.abspath(__file__))
+CHARS = {
+    'xiaoyu': dict(file=os.path.join(_DIR, 'xiaoyu_head.png'), cx=161, cy=205, r=157, shirt=False),
+    # 老師:頭部切自設定圖(眼鏡、髮型),身體加白襯衫和紅領帶,可拿指揮棒(pose['pointer']=True)
+    'teacher': dict(file=os.path.join(_DIR, 'teacher_head.png'), cx=169, cy=190, r=164, shirt=True),
+}
+HEAD = CHARS['xiaoyu']
+_heads = {}
+RED_TIE = (192, 50, 46, 255)
 
 
 def run_pose(phase, lean=10):
@@ -38,7 +45,8 @@ def mix(a, b, k):
     return out
 
 
-def draw_xiaoyu(img, x, feet_y, h, pose):
+def draw_xiaoyu(img, x, feet_y, h, pose, char='xiaoyu'):
+    C = CHARS[char]
     s = h / 600 * SS                        # 以 600px 高為基準設計
     W, H = int(420 * s), int(700 * s)
     lay = Image.new('RGBA', (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
@@ -67,22 +75,38 @@ def draw_xiaoyu(img, x, feet_y, h, pose):
     hw = pose.get('hipw', 0) * s          # 正面站姿:兩腿從左右兩點出發,像設定圖的褲管
     hipL, hipR = (hip[0] - hw, hip[1]), (hip[0] + hw, hip[1])
     limb(hipR, pose['rl'], pose['rk'], 103, 103)
+    hand_r = None
     if not pose.get('wave'):
-        limb(shoulder, pose['ra'], pose['rf'], 72, 68, True)
+        hand_r = limb(shoulder, pose['ra'], pose['rf'], 72, 68, True)
     d.line([hip, neck], fill=NAVY, width=lw)
+    if C['shirt']:       # 白襯衫(梯形)+ 紅領帶
+        sw, hw2 = 46 * s, 36 * s
+        top_y = neck[1] + 10 * s; bot_y = hip[1] + 6 * s
+        tx = lambda y: hip[0] + (neck[0] - hip[0]) * (hip[1] - y) / max(hip[1] - neck[1], 1)
+        d.polygon([(tx(top_y) - sw, top_y), (tx(top_y) + sw, top_y), (tx(bot_y) + hw2, bot_y), (tx(bot_y) - hw2, bot_y)],
+                  fill=WHITE, outline=NAVY, width=int(lw * 0.8))
+        tie_top, tie_bot = top_y + 4 * s, top_y + 95 * s
+        cxt = tx(tie_top)
+        d.polygon([(cxt - 10 * s, tie_top), (cxt + 10 * s, tie_top), (cxt + 14 * s, tie_bot - 18 * s),
+                   (cxt, tie_bot), (cxt - 14 * s, tie_bot - 18 * s)], fill=RED_TIE, outline=NAVY, width=int(lw * 0.5))
     limb(hipL, pose['ll'], pose['lk'], 103, 103)
     if hw: d.line([hipL, hipR], fill=NAVY, width=lw)
     limb(shoulder, pose['la'], pose['lf'], 72, 68, True)
     # 頭
     hr = 84 * s; hc = (neck[0] + 6 * s * math.sin(lean), neck[1] - hr + 4 * s)
-    global _head
+    HEAD = C
     if pose.get('head', True) and os.path.exists(HEAD['file']):
-        if _head is None: _head = Image.open(HEAD['file']).convert('RGBA')
+        if char not in _heads: _heads[char] = Image.open(HEAD['file']).convert('RGBA')
+        _head = _heads[char]
         k = hr / HEAD['r']
         hd = _head.resize((int(_head.width * k), int(_head.height * k)), Image.LANCZOS)
         hd = hd.rotate(-math.degrees(lean) * 0.5, resample=Image.BICUBIC, expand=True,
                        center=(HEAD['cx'] * k, HEAD['cy'] * k))
         lay.alpha_composite(hd, (int(hc[0] - HEAD['cx'] * k), int(hc[1] - HEAD['cy'] * k)))
+        if pose.get('pointer') and hand_r:     # 指揮棒:從右手往 pointer_angle 方向伸出
+            pa = math.radians(pose.get('pointer_angle', 130)); L = 230 * s
+            d.line([(hand_r[0] - 30 * s * math.sin(pa), hand_r[1] - 30 * s * math.cos(pa)),
+                    (hand_r[0] + L * math.sin(pa), hand_r[1] + L * math.cos(pa))], fill=NAVY, width=int(lw * 0.7))
         if pose.get('wave'):     # 揮手的手畫在頭前面:上臂往外上舉,前臂朝上左右擺(wave_f 是前臂相對角度)
             limb(shoulder, -105, pose.get('wave_f', -55), 80, 72, True)
         lay = lay.resize((W // SS, H // SS), Image.LANCZOS)
