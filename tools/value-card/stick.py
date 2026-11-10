@@ -75,8 +75,9 @@ def draw_xiaoyu(img, x, feet_y, h, pose, char='xiaoyu'):
     hw = pose.get('hipw', 0) * s          # 正面站姿:兩腿從左右兩點出發,像設定圖的褲管
     hipL, hipR = (hip[0] - hw, hip[1]), (hip[0] + hw, hip[1])
     limb(hipR, pose['rl'], pose['rk'], 103, 103)
-    hand_r = None
-    if not pose.get('wave'):
+    hand_r = None; pointer_out = None
+    ox, oy = x - W / SS / 2, feet_y - H / SS + 30 * s / SS        # 圖層左上角在畫面上的位置(縮小後)
+    if not pose.get('wave') and not pose.get('point_to'):
         hand_r = limb(shoulder, pose['ra'], pose['rf'], 72, 68, True)
     d.line([hip, neck], fill=NAVY, width=lw)
     if C['shirt']:       # 白襯衫(梯形)+ 紅領帶
@@ -107,10 +108,25 @@ def draw_xiaoyu(img, x, feet_y, h, pose, char='xiaoyu'):
             pa = math.radians(pose.get('pointer_angle', 130)); L = 230 * s
             d.line([(hand_r[0] - 30 * s * math.sin(pa), hand_r[1] - 30 * s * math.cos(pa)),
                     (hand_r[0] + L * math.sin(pa), hand_r[1] + L * math.cos(pa))], fill=NAVY, width=int(lw * 0.7))
+        if pose.get('point_to'):      # 指揮棒指向畫面上的某一點 (X, Y):上臂往目標那側水平伸出(避開臉),前臂和棒子對準目標
+            tx, ty = (pose['point_to'][0] - ox) * SS, (pose['point_to'][1] - oy) * SS
+            side = -1 if tx < shoulder[0] else 1
+            ua = math.radians(side * 100)                       # 上臂:往側邊、略往上
+            el = (shoulder[0] + 88 * s * math.sin(ua), shoulder[1] + 88 * s * math.cos(ua))
+            dist = math.hypot(tx - el[0], ty - el[1]); ux, uy = (tx - el[0]) / dist, (ty - el[1]) / dist
+            hd_ = (el[0] + ux * 74 * s, el[1] + uy * 74 * s)
+            d.line([shoulder, el, hd_], fill=NAVY, width=lw, joint='curve')
+            reach = pose.get('point_k', 1.0); L = max(min(dist - 74 * s - 24 * s, 520 * s), 40 * s) * reach
+            stick_line = [(hd_[0] - ux * 22 * s, hd_[1] - uy * 22 * s), (hd_[0] + ux * L, hd_[1] + uy * L)]
+            d.line(stick_line, fill=NAVY, width=int(lw * 0.7))
+            pointer_out = ([((px / SS) + ox, (py / SS) + oy) for px, py in stick_line], max(int(lw * 0.7 / SS), 2))
+            r = 21 * s; d.ellipse([hd_[0] - r, hd_[1] - r, hd_[0] + r, hd_[1] + r], fill=WHITE, outline=NAVY, width=int(lw * 0.8))
         if pose.get('wave'):     # 揮手的手畫在頭前面:上臂往外上舉,前臂朝上左右擺(wave_f 是前臂相對角度)
             limb(shoulder, -105, pose.get('wave_f', -55), 80, 72, True)
         lay = lay.resize((W // SS, H // SS), Image.LANCZOS)
         img.alpha_composite(lay, (int(x - lay.width / 2), int(feet_y - lay.height + 30 * s / SS)))
+        if pointer_out:      # 指揮棒可能伸出角色圖層外,直接畫在畫面上
+            ImageDraw.Draw(img).line(pointer_out[0], fill=NAVY, width=pointer_out[1])
         return
     # 頭髮(頭頂幾撮尖角)
     top = hc[1] - hr
