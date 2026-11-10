@@ -29,8 +29,22 @@ const QL = ['箱內有 50 顆白球、10 顆紅球，', '抽球 31 次，每次�
 const QX = BOARD.x + 40, QY = BOARD.y + 100, QH = 88, QS = 54;
 const WRONG = '10 ÷ 60 = 1/6';
 function boardQ(ctx, t, opt = {}) {
+  // 系列名(固定):紅筆手寫 + 雙底線,右上角像考卷一樣寫編號
   boardText(ctx, '這題錯在哪？', QX, QY - 10, 64, '#d8312b', 1);
-  QL.forEach((s, i) => boardText(ctx, s, QX, QY + 76 + i * QH, QS, i === 2 && opt.hl ? '#d8312b' : '#1f2a44', kf(t, [[i * .1, 0], [.15 + i * .1, 1]], lin)));
+  const sw = boardW(ctx, '這題錯在哪？', 64); redUnderline(ctx, QX, QX + sw - 30, QY + 12, 1);
+  boardText(ctx, 'No.003', BOARD.x + BOARD.w - 40 - boardW(ctx, 'No.003', 54), QY - 12, 54, '#6b7480', 1);
+  // 開場鉤子(每集不同):大字手寫在白板中央,小宇開始算之前擦掉換成題目
+  const tQ = tAt(0, '十除以') - .45, wipe = clamp((t - tQ) / .3);
+  if (wipe < 1) {
+    ctx.save(); ctx.beginPath(); ctx.rect(BOARD.x + BOARD.w * wipe, BOARD.y + 130, BOARD.w, BOARD.h); ctx.clip();
+    boardText(ctx, '抽走 4 顆紅球，', 540, BOARD.y + 300, 96, '#1f2a44', 1, 'center');
+    boardText(ctx, '機率還是', 400, BOARD.y + 500, 96, '#1f2a44', 1, 'center');
+    boardText(ctx, '1/6', 720, BOARD.y + 510, 150, '#2f63c9', 1, 'center');
+    boardText(ctx, '？', 935, BOARD.y + 500, 110, '#d8312b', kf(t, [[.35, 0], [.55, 1]], lin), 'center');
+    redCircle(ctx, 722, BOARD.y + 462, 150, 92, kf(t, [[.05, 0], [.45, 1]], lin));
+    ctx.restore();
+  }
+  QL.forEach((s, i) => boardText(ctx, s, QX, QY + 76 + i * QH, QS, i === 2 && opt.hl ? '#d8312b' : '#1f2a44', kf(t, [[tQ + .2 + i * .1, 0], [tQ + .45 + i * .1, 1]], lin)));
   const wy = QY + 76 + 5 * QH + 40;
   boardText(ctx, WRONG, QX, wy, 66, '#2f63c9', kf(t, [[tAt(0, '十除以'), 0], [tAt(0, '六分之一') + .5, 1]], lin));
   if (opt.cross) redCross(ctx, QX + boardW(ctx, WRONG, 66) + 60, wy - 22, 36, kf(t, [[opt.cross, 0], [opt.cross + .35, 1]], lin));
