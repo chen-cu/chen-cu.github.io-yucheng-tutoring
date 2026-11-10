@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw
 import make_card as mc
 import stick
 
-W, H, FPS, DUR = 1080, 1920, 30, 2.2
+W, H, FPS, DUR = 1080, 1920, 30, 3.0
 RED, NAVY, BLACK = (206, 38, 38, 255), (24, 70, 150, 255), (25, 25, 25, 255)
 ez = lambda k: k * k * (3 - 2 * k)
 back = lambda k: 1 + 2.7 * (k - 1) ** 3 + 1.7 * (k - 1) ** 2
@@ -49,16 +49,16 @@ def main(out):
         for i, (im, x, t0, rot) in enumerate([(w1, 370, 0.0, 4), (w2, 710, 0.15, -3)]):
             k = cl((t - t0) / 0.4)
             if k > 0: put(fr, im, x, 330, back(k), rot * (1 - k) + rot * 0.4)
-        # 2. 小宇從左邊跑進來 0.3~1.05s,停下後揮手
-        k = cl((t - 0.3) / 0.75)
+        # 2. 小宇從左邊跑進來 0.3~1.6s(2026-11-10 使用者要求放慢),停下後揮手
+        k = cl((t - 0.3) / 1.3)
         if k > 0:
             x = -160 + (x_end + 160) * (1 - (1 - k) ** 2)
-            pose = stick.mix(stick.run_pose(t * 2 * math.pi * 2.6), stick.STAND, ez(cl((k - 0.75) / 0.25)))
-            if t > 1.15:
-                pose = dict(pose, wave=True, wave_f=-42 + 16 * math.sin((t - 1.15) * 14), mouth='open')
+            pose = stick.mix(stick.run_pose(t * 2 * math.pi * 1.9), stick.STAND, ez(cl((k - 0.8) / 0.2)))
+            if t > 1.75:
+                pose = dict(pose, wave=True, wave_f=-42 + 16 * math.sin((t - 1.75) * 11), mouth='open')
             stick.draw_xiaoyu(fr, x, feet, h, pose)
-        # 3. 紅色手繪箭頭從標語下方畫向小宇 0.95~1.3s
-        k = ez(cl((t - 0.95) / 0.35))
+        # 3. 紅色手繪箭頭從標語下方畫向小宇 1.45~1.85s
+        k = ez(cl((t - 1.45) / 0.4))
         if k > 0:
             d = ImageDraw.Draw(fr); x0, y0, y1 = x_end, 640, 800
             pts = [(x0 + 6 * math.sin(i / 6), y0 + (y1 - y0) * i / 30) for i in range(int(31 * k))]
