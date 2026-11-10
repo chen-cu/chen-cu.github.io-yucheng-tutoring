@@ -19,7 +19,7 @@ for i, ln in enumerate(cfg['lines']):
     chunks = []
     for seg in re.split(r'(?<=[，。！？：；、])|(?<=……)', txt):
         seg = seg.strip()
-        while len(seg) > 11: chunks.append(seg[:10]); seg = seg[10:]
+        while len(seg) > 13: chunks.append(seg[:12]); seg = seg[12:]
         if seg: chunks.append(seg)
     tot = sum(len(c) for c in chunks); u = t
     for c in chunks:

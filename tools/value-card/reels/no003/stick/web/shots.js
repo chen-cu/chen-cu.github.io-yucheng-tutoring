@@ -180,7 +180,7 @@ SHOTS.push({ start: cut(7), end: cut(8), tr: 'cut', draw(ctx, lt, t) {
   drawStick(ctx, C(TC, { x: 840, y: FLOOR_Y, s: 640, flip: -1, arms: { L: [.3, -.1], R: aimAt(840, FLOOR_Y, 640, -1, 760, 760) }, prop: pointerProp(.7), face: { eyes: 'normal', mouth: 'smile', look: [-.6, -.3] } }));
   drawStick(ctx, C(XY, { x: 260, y: FLOOR_Y, s: 540, arms: { L: [.3, -.1], R: [.3, -.1] }, face: { eyes: 'wide', mouth: 'o', look: [.7, -.6], browUp: 1 } }));
 } });
-// I — 「我的六分之一……」小宇蹲在角落,頭上烏雲
+// I — 「我的分數……跟零用錢一起被抽走了」小宇蹲角落、烏雲,1/6 紙條和錢幣飛走
 SHOTS.push({ start: cut(8), end: cut(9), tr: 'whip', draw(ctx, lt, t) {
   const cam = { x: 300, y: 1250, z: 1.6, r: 0 };
   classBG(ctx, cam, t); applyCam(ctx, cam, 1);
@@ -191,8 +191,11 @@ SHOTS.push({ start: cut(8), end: cut(9), tr: 'whip', draw(ctx, lt, t) {
   ctx.save(); ctx.globalAlpha = clamp(lt * 3); cloudShape(ctx, 240, 1100 + Math.sin(lt * 2) * 5, 55, 3); fillStroke(ctx, '#8a93a0', 4);
   for (let i = 0; i < 7; i++) { const p = (lt * 1.6 + i * .37) % 1; line(ctx, 190 + i * 16, 1135 + p * 70, 186 + i * 16, 1150 + p * 70, 4, '#6fa8dc'); }
   ctx.restore();
-  // 小紙條 1/6 掉下
-  const p = clamp(lt / 1.2); ctx.save(); ctx.translate(110, 1300 + p * 220); ctx.rotate(p * 1.2 - .3); rrect(ctx, -50, -34, 100, 68, 6); fillStroke(ctx, '#fffaf0', 4); text(ctx, '1/6', 0, 2, 40, '#2f63c9', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore();
+  // 「1/6」紙條和錢幣一起飛走(呼應「抽走就不回來了」)
+  const tf = tAt(8, '跟零用錢'), q = clamp((t - tf) / 2.0);
+  const nx = lerp(330, 760, easeIn(q)), ny = lerp(1450, 1000, q) - Math.sin(q * Math.PI) * 60;
+  ctx.save(); ctx.translate(nx, ny); ctx.rotate(-.2 + q * 2.5); rrect(ctx, -55, -36, 110, 72, 6); fillStroke(ctx, '#fffaf0', 4); text(ctx, '1/6', 0, 2, 42, '#2f63c9', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore();
+  if (q > 0) for (let i = 0; i < 3; i++) { const k = clamp(q * 1.1 - i * .08), x = lerp(380, 820, easeIn(k)) + i * 40, y = lerp(1280, 900, k) - i * 30; circle(ctx, x, y, 24); fillStroke(ctx, '#f2c230', 4); text(ctx, '$', x, y + 2, 30, '#9a6a00', INK, 0, '"Noto Sans CJK TC"', 900); }
 } });
 // J — CTA:留言「考卷」+ logo + 標語(在 IG 安全區內)
 SHOTS.push({ start: cut(9), end: Le(9) + 2.2, tr: 'cut', draw(ctx, lt, t) {
