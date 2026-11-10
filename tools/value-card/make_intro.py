@@ -41,11 +41,12 @@ def paper():
     return img
 
 
-def main(xy_path, out):
+def main(xy_path, out, walk_path=None):
     bg = paper()
     logo = Image.open(f'{mc.HERE}/logo.png').convert('RGBA').resize((340, 340), Image.LANCZOS)
     m = Image.new('L', logo.size, 0); ImageDraw.Draw(m).ellipse([0, 0, 339, 339], fill=255); logo.putalpha(m)
-    xy = cutout(xy_path, 520)
+    xy = cutout(xy_path, 430)
+    wk = cutout(walk_path, 430) if walk_path else xy
     cx, cy = W // 2, 760
     # 文字圖層(由左往右掃出)
     txt = Image.new('RGBA', (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(txt)
@@ -70,14 +71,18 @@ def main(xy_path, out):
             n = int(400 * k); pts = []
             for i in range(n):
                 a = -math.pi * 0.6 + 2.15 * math.pi * i / 400
-                r = 225 + wob[i] * 0.6 + 8 * math.sin(a * 3)
-                pts.append((cx + r * 1.08 * math.cos(a), cy + r * 0.92 * math.sin(a)))
+                r = 226 + wob[i] * 0.25 + (6 if a > math.pi * 1.3 else 0) * (a - math.pi * 1.3)   # 接近收尾時略往外,像手畫交疊
+                pts.append((cx + r * 1.04 * math.cos(a), cy + r * 0.98 * math.sin(a)))
             if len(pts) > 1: ImageDraw.Draw(fr).line(pts, fill=mc.RED + (255,), width=9, joint='curve')
-        # 3. 小宇從左下探頭 0.55~1.0s
-        k = min(max((t - 0.55) / 0.45, 0), 1)
+        # 3. 小宇從左邊跑進來 0.5~1.05s(走路姿勢上下彈跳),停下後換正面
+        k = min(max((t - 0.5) / 0.55, 0), 1)
         if k > 0:
-            y = int(H - 40 - xy.height * 0.78 * back(k)) + int(xy.height * 0.0)
-            fr.alpha_composite(xy, (150, max(y, cy + 470)))
+            feet, x_end = 1680, 200   # 站在標語下方,不擋字
+            if k < 1:
+                x = int(-wk.width + (x_end + wk.width) * ez(k)); bob = int(abs(math.sin(k * math.pi * 4)) * 26)
+                fr.alpha_composite(wk, (x, feet - wk.height - bob))
+            else:
+                fr.alpha_composite(xy, (x_end, feet - xy.height))
         # 4. 文字掃出 0.8~1.3s
         k = ez(min(max((t - 0.8) / 0.5, 0), 1))
         if k > 0:
@@ -88,4 +93,5 @@ def main(xy_path, out):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else 'intro.mp4')
+    # 用法:python3 make_intro.py 小宇正面.png 輸出.mp4 [小宇走路.png]
+    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else 'intro.mp4', sys.argv[3] if len(sys.argv) > 3 else None)
