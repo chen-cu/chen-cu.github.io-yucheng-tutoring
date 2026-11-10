@@ -4,7 +4,7 @@
 可選:GEMINI_TTS_MODEL 指定模型名稱(預設依序嘗試下方 MODELS)。
 
 單獨使用(批次生成台詞音檔,不用到 AI Studio 一段段下載):
-  python3 gemini_tts.py lines.json 輸出資料夾
+  python3 gemini_tts.py lines.json 輸出資料夾 [--redo]   (已存在的音檔預設跳過)
 lines.json:
   {"voices": {"小宇": {"voice": "Leda", "style": "13 歲台灣小男孩……"},
               "老師": {"voice": "Charon", "style": "溫和的國中自然老師……"}},
@@ -59,5 +59,7 @@ if __name__ == '__main__':
     for ln in cfg['lines']:
         v = cfg['voices'][ln['who']]
         p = os.path.join(outdir, ln['file'])
+        if os.path.exists(p) and '--redo' not in sys.argv:     # 已生成的跳過,省額度;要重生加 --redo
+            print('skip', p); continue
         pcm = say(ln['text'], v['voice'], v.get('style', ''), p)
         print('ok', p, f'{len(pcm) / 2 / SR:.1f}s')
