@@ -210,7 +210,7 @@ SHOTS.push({ start: cut(8), end: cut(9), tr: 'whip', draw(ctx, lt, t) {
 SHOTS.push({ start: cut(9), end: Le(9) + 2.4, tr: 'cut', draw(ctx, lt, t) {
   const hh = handheld(t, 2); const cam = { x: 540 + hh[0], y: 960 + hh[1], z: 1.0, r: 0 };
   classBG(ctx, cam, t); applyCam(ctx, cam, .8);
-  boardText(ctx, '你的考卷也有陷阱嗎？', 540, BOARD.y + 130, 64, '#1f2a44', kf(t, [[Ls(9), 0], [Ls(9) + .9, 1]], lin), 'center');
+  boardText(ctx, '你的考卷也有這種陷阱嗎？', 540, BOARD.y + 130, 62, '#1f2a44', kf(t, [[Ls(9), 0], [Ls(9) + .9, 1]], lin), 'center');
   const k = kf(t, [[tAt(9, '留言'), 0], [tAt(9, '留言') + .35, 1, backOut]]);
   ctx.save(); ctx.translate(540, BOARD.y + 300); ctx.scale(k, k); boardText(ctx, '留言「考卷」', 0, 40, 136, '#d8312b', 1, 'center'); ctx.restore();
   redCircle(ctx, 540, BOARD.y + 290, 390, 115, kf(t, [[tAt(9, '留言') + .4, 0], [tAt(9, '留言') + 1.0, 1]], lin));
@@ -240,6 +240,6 @@ SHOTS.push({ start: cut(9), end: Le(9) + 2.4, tr: 'cut', draw(ctx, lt, t) {
     for (const hx of [-120, 120]) { circle(ctx, hx, 62, 16); fillStroke(ctx, '#ffffff', 6, '#17253d'); }
     ctx.restore();
   }
-  drawStick(ctx, C(TC, { x: 820, y: FLOOR_Y, s: 620, flip: -1, arms: { L: [.3, -.1], R: aimAt(820, FLOOR_Y, 620, -1, 600, 640) }, prop: pointerProp(.75), face: { eyes: 'normal', mouth: 'smile', look: [-.5, -.4] } }));
+  drawStick(ctx, C(TC, { x: 820, y: FLOOR_Y, s: 620, flip: -1, arms: { L: [.3, -.1], R: aimAt(820, FLOOR_Y, 620, -1, 620, 1060) }, face: { eyes: 'normal', mouth: 'smile', look: [-.5, -.4] } }));
 } });
 window.LOGO = new Image(); LOGO.src = 'logo.png';
