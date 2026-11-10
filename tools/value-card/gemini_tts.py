@@ -13,6 +13,7 @@ lines.json:
 import os, sys, json, base64, wave, time, urllib.request, urllib.error
 
 MODELS = [m for m in [os.environ.get('GEMINI_TTS_MODEL')] if m] + [
+    'gemini-3.1-flash-tts-preview',       # 2026-11 現行模型,未綁帳單的專案有免費額度
     'gemini-2.5-flash-preview-tts', 'gemini-2.5-pro-preview-tts']
 URL = 'https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent'
 SR = 24000   # 回傳格式:16-bit PCM、單聲道、24 kHz
