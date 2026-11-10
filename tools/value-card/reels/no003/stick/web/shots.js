@@ -36,6 +36,13 @@ function boardQ(ctx, t, opt = {}) {
   if (opt.cross) redCross(ctx, QX + boardW(ctx, WRONG, 66) + 60, wy - 22, 36, kf(t, [[opt.cross, 0], [opt.cross + .35, 1]], lin));
   redUnderline(ctx, QX, QX + boardW(ctx, QL[2], QS) - 10, QY + 76 + 2 * QH + 16, kf(t, [[tAt(1, '第三行'), 0], [tAt(1, '第三行') + .6, 1]], lin));
 }
+// 角色名牌(首次出場、結尾):小宇 藍、誠誠老師 紅
+function nameTag(ctx, name, x, y, col, t0, t, hold = 2.2) {
+  const k = kf(t, [[t0, 0], [t0 + .25, 1, backOut], [t0 + hold, 1], [t0 + hold + .25, 0]]); if (k <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.font = '900 46px "Noto Sans CJK TC"'; const w = ctx.measureText(name).width + 56;
+  rrect(ctx, -w / 2, -36, w, 72, 36); fillStroke(ctx, col, 5); ctx.beginPath(); ctx.moveTo(-14, 34); ctx.lineTo(0, 54); ctx.lineTo(14, 34); ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+  text(ctx, name, 0, 2, 46, '#fff', INK, 0, '"Noto Sans CJK TC"', 900); ctx.restore();
+}
 const SHOTS = [];
 const cut = (i, d = .08) => Ls(i) - d;
 
@@ -52,6 +59,7 @@ SHOTS.push({ start: 0, end: cut(1), tr: 'cut', draw(ctx, lt, t) {
   drawStick(ctx, C(XY, { x: 300, y: FLOOR_Y, s: 560, bob: done ? -Math.abs(Math.sin(lt * 9)) * .02 : 0, lean: done ? -.06 : 0, arms,
     face: { eyes: done ? 'happy' : 'normal', mouth: done ? 'grin' : (writing ? 'smirk' : 'grin'), look: writing ? [.7, -.6] : [.3, -.1], browAng: .25 } }));
   popText(ctx, '送分題！', 760, 1180, 110, '#d8312b', tAt(0, '送分題'), t, tAt(0, '十除以') - tAt(0, '送分題'));
+  nameTag(ctx, '小宇', 300, 980, '#2f63c9', .15, t, 2.0);
   popText(ctx, '1/6', 760, 1180, 150, '#2f63c9', tAt(0, '六分之一'), t, tDone - tAt(0, '六分之一'));
   if (done) { const a = kf(t, [[tDone, 0], [tDone + .15, 1], [Le(0) + .2, 1]]); sparkle(ctx, 520, 1020, 60 * a, a); sparkle(ctx, 120, 1060, 44 * a, a); }
 } });
@@ -67,6 +75,7 @@ SHOTS.push({ start: cut(1), end: cut(2), tr: 'cut', draw(ctx, lt, t) {
   drawStick(ctx, C(TC, { x: tx, y: FLOOR_Y, s: 640, flip: -1, legs: k < 1 ? walkLegs(lt, 14) : POSE.idle.legs,
     arms: aim ? { L: [.3, -.1], R: aimAt(tx, FLOOR_Y, 640, -1, QX + 340, QY + 76 + 2 * QH - 10) } : walkArms(lt, 14),
     prop: aim ? pointerProp(.95) : null, face: { eyes: 'half', mouth: 'flat', look: [-.6, -.2] } }));
+  nameTag(ctx, '誠誠老師', 820, 900, '#d8312b', Ls(1) + .45, t, 2.3);
 } });
 // C — 白板特寫第三行;小宇唸完攤手「然後呢?」
 SHOTS.push({ start: cut(2), end: cut(3), tr: 'whip', draw(ctx, lt, t) {
