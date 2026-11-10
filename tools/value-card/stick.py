@@ -67,8 +67,8 @@ def draw_xiaoyu(img, x, feet_y, h, pose):
     hw = pose.get('hipw', 0) * s          # 正面站姿:兩腿從左右兩點出發,像設定圖的褲管
     hipL, hipR = (hip[0] - hw, hip[1]), (hip[0] + hw, hip[1])
     limb(hipR, pose['rl'], pose['rk'], 103, 103)
-    ra = pose['ra'] if not pose.get('wave') else 160
-    limb(shoulder, ra, pose['rf'] if not pose.get('wave') else 25, 72, 68, True)
+    if not pose.get('wave'):
+        limb(shoulder, pose['ra'], pose['rf'], 72, 68, True)
     d.line([hip, neck], fill=NAVY, width=lw)
     limb(hipL, pose['ll'], pose['lk'], 103, 103)
     if hw: d.line([hipL, hipR], fill=NAVY, width=lw)
@@ -83,6 +83,8 @@ def draw_xiaoyu(img, x, feet_y, h, pose):
         hd = hd.rotate(-math.degrees(lean) * 0.5, resample=Image.BICUBIC, expand=True,
                        center=(HEAD['cx'] * k, HEAD['cy'] * k))
         lay.alpha_composite(hd, (int(hc[0] - HEAD['cx'] * k), int(hc[1] - HEAD['cy'] * k)))
+        if pose.get('wave'):     # 揮手的手畫在頭前面:上臂往外上舉,前臂朝上左右擺(wave_f 是前臂相對角度)
+            limb(shoulder, -105, pose.get('wave_f', -55), 80, 72, True)
         lay = lay.resize((W // SS, H // SS), Image.LANCZOS)
         img.alpha_composite(lay, (int(x - lay.width / 2), int(feet_y - lay.height + 30 * s / SS)))
         return
