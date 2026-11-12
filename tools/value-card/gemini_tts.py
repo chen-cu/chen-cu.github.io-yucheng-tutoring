@@ -26,7 +26,8 @@ def say(text, voice='Leda', style='', out=None):
     """回傳 PCM bytes;給 out 就另存成 wav。style 是語氣指示(例:13 歲台灣小男孩、語氣好奇)"""
     key = os.environ.get('GEMINI_API_KEY')
     assert key, '請先設定環境變數 GEMINI_API_KEY'
-    prompt = f'用以下語氣念出引號內的文字，只念引號內的字，不要加字：{style}{TW}\n「{text}」'
+    # 仿 AI Studio 網頁版的格式:角色設定 + 逐字稿(和網頁生成的聲音盡量一致)
+    prompt = f'## Audio Profile:\n{style}{"" if TW in style else TW}\n\n## Transcript:\n{text}'
     body = json.dumps({
         'contents': [{'parts': [{'text': prompt}]}],
         'generationConfig': {'responseModalities': ['AUDIO'],
