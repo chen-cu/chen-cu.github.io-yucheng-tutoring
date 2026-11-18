@@ -265,6 +265,30 @@ body {
 
 .hero-cta { margin-top: 40px; }
 
+/* 首屏左右分欄:左文字、右邊小宇與誠誠老師(2026-11-18) */
+.hero-split { text-align: left; padding: 72px 0 80px; }
+.hero-grid { display: grid; grid-template-columns: 1fr; gap: 48px; align-items: center; }
+.hero-split .hero-title { margin: 0; }
+.hero-split .cta-choice { justify-content: flex-start; }
+.hero-split .cta-option { align-items: flex-start; }
+.hero-visual { position: relative; margin: 0; width: 100%; max-width: 460px; justify-self: center;
+  border-radius: 12px; overflow: hidden; border: 1px solid rgba(29, 45, 63, 0.08); }
+.hero-visual img { display: block; width: 100%; height: auto; }
+/* 白板內框位置(依圖實測):左 7.2%、寬 82%、上 8.7%、高 44% */
+.hero-board { position: absolute; left: 7.2%; width: 82%; top: 8.7%; height: 44%;
+  display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+  font-family: "Yucheng Hand", var(--serif); font-size: clamp(1.5rem, 6vw, 2.5rem); line-height: 1.5; color: var(--ink); }
+.hero-board span { color: var(--pen); }
+@media (min-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr 1fr; }
+  .hero-board { font-size: 2.5rem; }
+}
+@media (max-width: 899px) {
+  .hero-split .cta-choice { justify-content: center; }
+  .hero-split .cta-option { align-items: center; }
+  .hero-split .hero-text { text-align: center; }
+}
+
 .cta-note {
   margin-top: 14px;
   font-size: 0.875rem;
