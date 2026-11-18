@@ -279,9 +279,16 @@ body {
   display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
   font-family: "Yucheng Hand", var(--serif); font-size: clamp(1.5rem, 6vw, 2.5rem); line-height: 1.5; color: var(--ink); }
 .hero-board span { color: var(--pen); }
+/* 師資團隊頁:老師指白板(白板左側留給文字,避開老師的頭) */
+.page-hero-split { text-align: left; }
+.page-hero-split .page-title { margin-top: 12px; }
+.hero-visual-sm { max-width: 380px; }
+.hero-board-teacher { left: 8%; width: 52%; top: 7.8%; height: 44.2%; font-size: clamp(1.125rem, 4.4vw, 1.5rem); }
+@media (max-width: 899px) { .page-hero-split .hero-text { text-align: center; } }
 @media (min-width: 900px) {
   .hero-grid { grid-template-columns: 1fr 1fr; }
   .hero-board { font-size: 2.5rem; }
+  .hero-board-teacher { font-size: 1.5rem; }
 }
 @media (max-width: 899px) {
   .hero-split .cta-choice { justify-content: center; }
