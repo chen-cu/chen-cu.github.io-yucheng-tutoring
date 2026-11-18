@@ -70,7 +70,7 @@ def ellipse(d, box, color, seed, width=4):
         pts.append((cx + rx * k * math.cos(t), cy + ry * k * math.sin(t)))
     d.line(pts, fill=color, width=width, joint='curve')
 
-def card(c, out, size=80, gap=16):
+def card(c, out, size=80, gap=26):
     lines, notes, seed = c['lines'], c['notes'], c.get('seed', 1)
     ul, ci = c.get('underline'), c.get('circle')
     img, d = paper(seed); f = hf(size)
@@ -88,7 +88,7 @@ def card(c, out, size=80, gap=16):
     if ci:
         ri, a, b = ci
         xa = xpos(ri, a); xb = X0 + d.textlength(lines[ri][:b], font=f) + (gap if a > 0 else 0)
-        y = rule(rows[ri]); ellipse(d, (xa - 12, y - size - 4, xb + 4, y + 4), RED, seed + 3)
+        y = rule(rows[ri]); ellipse(d, (xa - 24, y - size - 24, xb + 14, y + 10), RED, seed + 3)   # 放大一圈,避免切到首尾字的筆畫
     if ul:
         ri, a, b = ul
         xa = xpos(ri, a); xb = xpos(ri, b - 1) + d.textlength(lines[ri][b - 1], font=f); y = rule(rows[ri])
