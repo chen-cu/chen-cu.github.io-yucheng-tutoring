@@ -88,12 +88,11 @@ def card(c, out, size=80, gap=26):
     if ci:
         ri, a, b = ci
         xa = xpos(ri, a); xb = X0 + d.textlength(lines[ri][:b], font=f) + (gap if a > 0 else 0)
-        y = rule(rows[ri]); ellipse(d, (xa - 24, y - size - 10, xb + 14, y + 12), RED, seed + 3)   # 放大一圈,避免切到首尾字的筆畫
+        y = rule(rows[ri]); ellipse(d, (xa - 24, y - size - 2, xb + 14, y + 14), RED, seed + 3)   # 放大一圈,避免切到首尾字的筆畫
     if ul:
         ri, a, b = ul
         xa = xpos(ri, a); xb = xpos(ri, b - 1) + d.textlength(lines[ri][b - 1], font=f); y = rule(rows[ri])
-        wobble_line(d, (xa - 4, y - 2), (xb + 6, y - 4), RED, 5, 1.2, seed + 5)
-        wobble_line(d, (xa + 12, y + 12), (xb - 12, y + 10), RED, 4, 1.0, seed + 6)
+        wobble_line(d, (xa - 4, y - 4), (xb + 6, y - 6), RED, 5, 0.8, seed + 5)
     for i, s in enumerate(notes):
         d.text((X0, rule(6 + i) - 14), s, font=hf(38), fill=GREY, anchor='ls')
     logo = Image.open(os.path.join(HERE, 'logo.png')).convert('RGBA').resize((104, 104), Image.LANCZOS)
