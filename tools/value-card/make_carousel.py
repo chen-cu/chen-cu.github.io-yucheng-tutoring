@@ -3,7 +3,7 @@
 用法:python3 make_carousel.py carousel.json 輸出資料夾
 JSON:{"no": "016", "seed": 16, "pages": [{"header": "...", "lines": [...], "notes": [...],
        "circle": [行, 起, 迄], "underline": [行, 起, 迄], "size": 80}, ...]}
-第一頁自動加「往左滑」提示,最後一頁自動加品牌署名;每頁右上角標頁碼。
+第一頁頁首固定「老師的紅筆 No.{no}」(JSON 的 header 不是這個開頭會被取代),第一頁自動加「往左滑」提示,最後一頁自動加品牌署名;每頁右上角標頁碼。
 """
 import json, os, sys
 from PIL import Image, ImageDraw
@@ -11,12 +11,17 @@ from fontTools.ttLib import TTFont
 from make_card import (paper, hf, rule, ellipse, wobble_line, FONT, HERE,
                        W, H, X0, RED, INK, GREY, NAVY)
 
+NO = ''
+
 def page(p, i, n, seed, out):
     img, d = paper(seed + i)
     size = p.get('size', 80); f = hf(size); gap = 16
     lines, notes = p.get('lines', []), p.get('notes', [])
     ci, ul = p.get('circle'), p.get('underline')
-    d.text((X0, rule(1) - 14), p['header'], font=hf(46), fill=RED, anchor='ls')
+    head = p['header']
+    if i == 0 and not head.startswith('老師的紅筆'):
+        head = f'老師的紅筆 No.{NO}'   # 第 1 頁頁首固定為系列名＋編號(2026-11-21)
+    d.text((X0, rule(1) - 14), head, font=hf(46), fill=RED, anchor='ls')
     d.text((W - 70, rule(1) - 14), f'{i + 1} / {n}', font=hf(36), fill=GREY, anchor='rs')
     start = p.get('row', 3)
     rows = [start + k for k in range(len(lines))]
@@ -36,8 +41,7 @@ def page(p, i, n, seed, out):
     if ul:
         ri, a, b = ul
         xa = xpos(ri, a); xb = xpos(ri, b - 1) + d.textlength(lines[ri][b - 1], font=f); y = rule(rows[ri])
-        wobble_line(d, (xa - 4, y + 4), (xb + 6, y), RED, 5, 2.2, seed + i + 5)
-        wobble_line(d, (xa + 10, y + 16), (xb - 10, y + 13), RED, 4, 2.0, seed + i + 6)
+        wobble_line(d, (xa - 4, y - 4), (xb + 6, y - 6), RED, 5, 0.8, seed + i + 5)   # 單條底線(2026-11-21,同 make_card)
     nr = rows[-1] + 2 if rows else 3
     for k, s in enumerate(notes):
         d.text((X0, rule(nr + k) - 14), s, font=hf(40), fill=GREY, anchor='ls')
@@ -75,7 +79,7 @@ if __name__ == '__main__':
     os.makedirs(out, exist_ok=True)
     bad = check(c)
     if bad: print('\n'.join(bad)); sys.exit(1)
-    n = len(c['pages'])
+    n = len(c['pages']); NO = c['no']
     for i, p in enumerate(c['pages']):
         page(p, i, n, c.get('seed', 1), os.path.join(out, f'ig-redpen-{c["no"]}-{i + 1}.jpg'))
     print('ok', n)
