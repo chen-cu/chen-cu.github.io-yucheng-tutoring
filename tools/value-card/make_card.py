@@ -63,10 +63,10 @@ def ellipse(d, box, color, seed, width=4):
     rnd = random.Random(seed)
     x0, y0, x1, y1 = box
     cx, cy, rx, ry = (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2, (y1 - y0) / 2
-    start = rnd.uniform(0, math.pi); pts = []
+    start = rnd.uniform(0, math.pi); ph = rnd.uniform(0, 2 * math.pi); pts = []
     for i in range(76):
         t = start + i / 70 * 2 * math.pi
-        k = 1 + rnd.uniform(-0.03, 0.03) + 0.04 * (i / 76)
+        k = 1 + 0.02 * math.sin(2 * t + ph) + 0.035 * (i / 76)   # 平滑起伏＋收尾略超出，避免逐點抖動造成的凹凸
         pts.append((cx + rx * k * math.cos(t), cy + ry * k * math.sin(t)))
     d.line(pts, fill=color, width=width, joint='curve')
 
